@@ -3,6 +3,8 @@ package com.kepsake.mizu.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -16,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import kotlinx.coroutines.delay
@@ -47,7 +49,7 @@ fun MangaView(images: List<String>, innerPadding: PaddingValues) {
             ),
         ) {
             items(delayedImages) { imageUrl ->
-                MangaPanel(imageUrl)
+                MangaPanel2(imageUrl)
             }
         }
 
@@ -61,19 +63,27 @@ fun MangaView(images: List<String>, innerPadding: PaddingValues) {
     }
 }
 
-
 @Composable
-fun MangaPanel(imageUrl: String) {
+fun MangaPanel2(imageUrl: String) {
     val context = LocalContext.current
-    AsyncImage(
+    SubcomposeAsyncImage(
         model = ImageRequest.Builder(context)
             .data(imageUrl)
             .memoryCachePolicy(CachePolicy.ENABLED)
+            .crossfade(true)
             .build(),
         contentDescription = null,
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp),
-        contentScale = ContentScale.Fit
+        contentScale = ContentScale.Fit,
+        loading = {
+            Card(
+                modifier = Modifier.height(600.dp),
+                colors = CardDefaults.cardColors(),
+                content = { }
+            )
+
+        },
     )
 }
