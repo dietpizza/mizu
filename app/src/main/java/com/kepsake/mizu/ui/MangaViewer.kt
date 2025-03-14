@@ -33,7 +33,7 @@ import androidx.compose.foundation.lazy.items
 
 
 @Composable
-fun MangaView(innerPadding: PaddingValues, initialFilePath: String?) {
+fun MangaViewer(innerPadding: PaddingValues, initialFilePath: String?) {
     val context = LocalContext.current
     var filePath by remember { mutableStateOf(initialFilePath ?: "") }
     var imagesInside by remember { mutableStateOf(emptyList<ZipEntry>()) }
