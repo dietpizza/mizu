@@ -9,14 +9,20 @@ import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,25 +33,36 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import com.kepsake.mizu.utils.clearPreviousMangaCache
+import com.kepsake.mizu.utils.extractImageFromZip
+import com.kepsake.mizu.utils.getPathFromUri
 import com.kepsake.mizu.utils.getZipFileEntries
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.UUID
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
-
 
 @Composable
 fun MangaView(innerPadding: PaddingValues) {
     val context = LocalContext.current
     var filePath by remember { mutableStateOf<String>("") }
     var imagesInside by remember { mutableStateOf(emptyList<ZipEntry>()) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    // Generate a unique ID for each loaded manga to distinguish cache files
+    var currentMangaId by remember { mutableStateOf("") }
 
     // Add a paging state to only load visible images
     val lazyListState = rememberLazyListState()
@@ -57,27 +74,46 @@ fun MangaView(innerPadding: PaddingValues) {
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let {
-            val path = getPathFromUri(context, it)
-            if (path != null) {
-                filePath = path
-                // Just get the entries but don't extract yet
-                val entries = getZipFileEntries(path)
-                imagesInside = entries
-                Log.d("ROHAN", "Filename: ${filePath}")
-                entries.forEach { Log.d("ROHAN", "File: ${it.name}") }
+            // Set loading state to true immediately after file selection
+            isLoading = true
 
-                // Clear any previously extracted images
-                extractedImages.clear()
+            // Process the zip file on a background thread
+            CoroutineScope(Dispatchers.IO).launch {
+                val path = getPathFromUri(context, it)
+                if (path != null) {
+                    // Generate a new manga ID for this file
+                    val newMangaId = UUID.randomUUID().toString()
+
+                    // Clear any previously extracted images
+                    extractedImages.clear()
+
+                    // Delete previous manga cache files
+                    clearPreviousMangaCache(context, currentMangaId)
+
+                    // Get the entries in the background
+                    val entries = getZipFileEntries(path)
+
+                    // Update the UI on the main thread
+                    withContext(Dispatchers.Main) {
+                        filePath = path
+                        currentMangaId = newMangaId
+                        imagesInside = entries
+                        Log.d("ROHAN", "Filename: ${filePath}")
+                        entries.forEach { Log.d("ROHAN", "File: ${it.name}") }
+
+                        // Loading complete
+                        isLoading = false
+                    }
+                } else {
+                    // If path extraction failed, update UI
+                    withContext(Dispatchers.Main) {
+                        isLoading = false
+                    }
+                }
             }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        if (!Environment.isExternalStorageManager()) {
-            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-            context.startActivity(intent)
-        } else {
-            filePickerLauncher.launch(arrayOf("*/*"))
+        } ?: run {
+            // If user cancels file selection, update UI
+            isLoading = false
         }
     }
 
@@ -89,7 +125,7 @@ fun MangaView(innerPadding: PaddingValues) {
         if (visibleItemsInfo.isNotEmpty()) visibleItemsInfo.last().index else 0
 
     // Prefetch images around visible area
-    LaunchedEffect(firstVisibleItemIndex, lastVisibleItemIndex) {
+    LaunchedEffect(firstVisibleItemIndex, lastVisibleItemIndex, currentMangaId) {
         if (imagesInside.isNotEmpty() && filePath.isNotEmpty()) {
             val prefetchStart = maxOf(0, firstVisibleItemIndex - 2)
             val prefetchEnd = minOf(imagesInside.size - 1, lastVisibleItemIndex + 2)
@@ -100,7 +136,8 @@ fun MangaView(innerPadding: PaddingValues) {
                     val entry = imagesInside[i]
                     if (!extractedImages.containsKey(entry.name)) {
                         launch(Dispatchers.IO) {
-                            val file = extractImageFromZip(filePath, entry.name, context)
+                            val file =
+                                extractImageFromZip(filePath, entry.name, context, currentMangaId)
                             extractedImages[entry.name] = file
                         }
                     }
@@ -121,46 +158,122 @@ fun MangaView(innerPadding: PaddingValues) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            state = lazyListState,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues.Absolute(
-                top = innerPadding.calculateTopPadding() + 8.dp,
-                bottom = innerPadding.calculateBottomPadding() + 8.dp
-            ),
-        ) {
-            items(imagesInside, key = { it.name }) { zipEntry ->
-                MangaPanel(extractedImages[zipEntry.name], zipEntry.name)
+        if (imagesInside.isNotEmpty()) {
+            LazyColumn(
+                state = lazyListState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues.Absolute(
+                    top = innerPadding.calculateTopPadding() + 8.dp,
+                    bottom = innerPadding.calculateBottomPadding() + 8.dp
+                ),
+            ) {
+                items(imagesInside, key = { it.name }) { zipEntry ->
+                    MangaPanel(filePath, zipEntry, extractedImages, currentMangaId)
+                }
             }
         }
 
-        if (imagesInside.isEmpty()) {
-            CircularProgressIndicator(
+        // Show loading indicator when processing the zip file
+        if (isLoading) {
+            Box(
                 modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(50.dp)
-            )
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(60.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        "Loading...",
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+        }
+
+        // Show empty state if no file is selected and not loading
+        if (imagesInside.isEmpty() && !isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        "No manga loaded",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Button(
+                        onClick = {
+                            if (Environment.isExternalStorageManager()) {
+                                filePickerLauncher.launch(
+                                    arrayOf(
+                                        "application/zip",
+                                        "application/x-cbz"
+                                    )
+                                )
+                            } else {
+                                val intent =
+                                    Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                                context.startActivity(intent)
+                            }
+                        }
+                    ) {
+                        Text("Select File")
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun MangaPanel(imageFile: File?, entryName: String) {
+fun MangaPanel(
+    zipFilePath: String,
+    zipEntry: ZipEntry,
+    extractedImages: MutableMap<String, File?>,
+    mangaId: String
+) {
     val context = LocalContext.current
+    var imageFile by remember { mutableStateOf<File?>(null) }
+
+    // Get the file from the cache map or extract it if needed
+    LaunchedEffect(zipEntry, mangaId) {
+        imageFile = extractedImages[zipEntry.name] ?: withContext(Dispatchers.IO) {
+            val file = extractImageFromZip(zipFilePath, zipEntry.name, context, mangaId)
+            extractedImages[zipEntry.name] = file
+            file
+        }
+    }
 
     SubcomposeAsyncImage(
-        model = imageFile?.let { ImageRequest.Builder(context).data(it).build() },
+        model = imageFile?.let {
+            ImageRequest.Builder(context)
+                .data(it)
+                .crossfade(true)
+                .diskCacheKey("${mangaId}_${zipEntry.name}")  // Use mangaId in cache key
+                .memoryCacheKey("${mangaId}_${zipEntry.name}") // Use mangaId in cache key
+                .build()
+        },
         contentDescription = null,
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp),
-        contentScale = ContentScale.Fit,
+        contentScale = ContentScale.FillWidth,
         loading = {
-            Box(
+            Card(
                 modifier = Modifier
                     .height(600.dp)
                     .fillMaxWidth(),
-                contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(50.dp)
@@ -168,89 +281,16 @@ fun MangaPanel(imageFile: File?, entryName: String) {
             }
         },
         error = {
-            Box(
+            Card(
                 modifier = Modifier
-                    .height(200.dp)
+                    .height(600.dp)
                     .fillMaxWidth(),
-                contentAlignment = Alignment.Center
             ) {
-                Text("Failed to load: $entryName")
+                CircularProgressIndicator(
+                    modifier = Modifier.size(50.dp)
+                )
             }
-        }
+        },
     )
 }
 
-// Modified to return a list of sorted zip entries
-fun getZipFileEntries(zipFilePath: String): List<ZipEntry> {
-    val zipEntries = mutableListOf<ZipEntry>()
-    try {
-        ZipFile(zipFilePath).use { zipFile ->
-            val entries = zipFile.entries()
-            while (entries.hasMoreElements()) {
-                val entry = entries.nextElement()
-                if (!entry.isDirectory && isImageFile(entry.name)) {
-                    zipEntries.add(entry)
-                }
-            }
-        }
-    } catch (e: Exception) {
-        Log.e("MangaView", "Error reading zip file", e)
-    }
-
-    // Sort entries by name for correct order
-    return zipEntries.sortedBy { it.name.lowercase() }
-}
-
-// Helper function to check if a file is an image
-fun isImageFile(fileName: String): Boolean {
-    val extensions = listOf(".jpg", ".jpeg", ".png", ".webp", ".gif")
-    return extensions.any { fileName.lowercase().endsWith(it) }
-}
-
-// Modified to create a temporary file in the app's cache directory
-fun extractImageFromZip(zipFilePath: String, entryName: String, context: Context): File? {
-    return try {
-        val tempDir = File(context.cacheDir, "manga_images").apply {
-            if (!exists()) mkdirs()
-        }
-        val tempFile = File(tempDir, entryName.replace('/', '_'))
-
-        // If the file already exists, just return it
-        if (tempFile.exists()) {
-            return tempFile
-        }
-
-        ZipFile(zipFilePath).use { zipFile ->
-            val entry = zipFile.getEntry(entryName)
-            if (entry != null && !entry.isDirectory) {
-                zipFile.getInputStream(entry).use { input ->
-                    tempFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
-                }
-                tempFile
-            } else null
-        }
-    } catch (e: Exception) {
-        Log.e("MangaView", "Error extracting image", e)
-        null
-    }
-}
-
-fun getPathFromUri(context: Context, uri: Uri): String? {
-    var path: String? = null
-    context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-        if (cursor.moveToFirst()) {
-            val columnIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (columnIndex != -1) {
-                val fileName = cursor.getString(columnIndex)
-                val file = File(context.cacheDir, fileName)
-                context.contentResolver.openInputStream(uri)?.use { input ->
-                    file.outputStream().use { output -> input.copyTo(output) }
-                }
-                path = file.absolutePath
-            }
-        }
-    }
-    return path
-}
