@@ -1,6 +1,6 @@
 [versions]
 accompanistNavigationAnimation = "0.32.0"
-agp = "8.8.0"
+agp = "8.8.2"
 animation = "1.7.8"
 coilCompose = "2.6.0"
 kotlin = "2.0.0"
@@ -10,15 +10,14 @@ junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.1"
-composeBom = "2024.04.01"
+composeBom = "2025.03.00"
 navigationCompose = "2.8.9"
-appcompat = "1.6.1"
-material = "1.10.0"
+appcompat = "1.7.0"
+material = "1.12.0"
 activity = "1.10.1"
-constraintlayout = "2.1.4"
+constraintlayout = "2.2.1"
 
 [libraries]
-accompanist-navigation-animation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanistNavigationAnimation" }
 androidx-animation = { module = "androidx.compose.animation:animation", version.ref = "animation" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
