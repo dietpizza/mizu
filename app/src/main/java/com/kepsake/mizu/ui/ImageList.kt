@@ -49,7 +49,7 @@ fun MangaView(images: List<String>, innerPadding: PaddingValues) {
             ),
         ) {
             items(delayedImages) { imageUrl ->
-                MangaPanel2(imageUrl)
+                MangaPanel(imageUrl)
             }
         }
 
@@ -64,7 +64,7 @@ fun MangaView(images: List<String>, innerPadding: PaddingValues) {
 }
 
 @Composable
-fun MangaPanel2(imageUrl: String) {
+fun MangaPanel(imageUrl: String) {
     val context = LocalContext.current
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(context)
