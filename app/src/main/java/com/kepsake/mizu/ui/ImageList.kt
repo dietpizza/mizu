@@ -63,6 +63,7 @@ fun MangaView(images: List<String>, innerPadding: PaddingValues) {
     }
 }
 
+
 @Composable
 fun MangaPanel(imageUrl: String) {
     val context = LocalContext.current
