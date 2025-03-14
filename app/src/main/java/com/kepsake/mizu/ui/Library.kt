@@ -398,66 +398,9 @@ suspend fun extractImageFromZip(
     }
 }
 
-suspend fun extractImageFromZip2(
-    context: Context,
-    uri: Uri,
-    entryName: String,
-    cacheId: String
-): File? = withContext(Dispatchers.IO) {
-    try {
-        // Create a cache directory for this specific comic
-        val cacheDir = File(context.cacheDir, "comics/$cacheId")
-        if (!cacheDir.exists()) {
-            cacheDir.mkdirs()
-        }
-
-        // Create a file for the extracted image
-        val outputFile = File(cacheDir, sanitizeFileName(entryName))
-
-        // If the file already exists, just return it
-        if (outputFile.exists() && outputFile.length() > 0) {
-            return@withContext outputFile
-        }
-
-        // Extract the image
-        context.contentResolver.openInputStream(uri)?.use { inputStream ->
-            ZipInputStream(inputStream).use { zipInputStream ->
-                var entry: ZipEntry? = zipInputStream.nextEntry
-                while (entry != null) {
-                    if (entry.name == entryName) {
-                        // Found the image, extract it
-                        outputFile.outputStream().use { output ->
-                            zipInputStream.copyTo(output)
-                        }
-                        return@withContext outputFile
-                    }
-                    zipInputStream.closeEntry()
-                    entry = zipInputStream.nextEntry
-                }
-            }
-        }
-
-        null
-    } catch (e: Exception) {
-        Log.e("Library", "Error extracting image: $entryName", e)
-        null
-    }
-}
 
 fun sanitizeFileName(fileName: String): String {
     return fileName.replace(Regex("[^a-zA-Z0-9.-]"), "_")
-}
-
-// Helper function to clear cache for previous manga
-fun clearComicCache(context: Context, exceptId: String? = null) {
-    val cacheDir = File(context.cacheDir, "comics")
-    if (cacheDir.exists()) {
-        cacheDir.listFiles()?.forEach { dir ->
-            if (exceptId == null || dir.name != exceptId) {
-                dir.deleteRecursively()
-            }
-        }
-    }
 }
 
 suspend fun findComicFilesInDirectory(context: Context, directoryUri: Uri): List<Uri> =
