@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 
 import com.kepsake.mizu.ui.MangaView
 import com.kepsake.mizu.ui.theme.MizuTheme
-import com.kepsake.mizu.utils.getImages
 
 class MangaReaderActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -1,68 +1,73 @@
 package com.kepsake.mizu.utils
 
 import android.content.Context
-import java.io.ByteArrayOutputStream
+import android.util.Log
 import java.io.File
-import java.io.InputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
+// Modified to create a temporary file in the app's cache directory with manga ID
+fun extractImageFromZip(
+    zipFilePath: String,
+    entryName: String,
+    context: Context,
+    mangaId: String
+): File? {
+    return try {
+        // Create a directory for this specific manga using the manga ID
+        val tempDir = File(context.cacheDir, "manga_images/$mangaId").apply {
+            if (!exists()) mkdirs()
+        }
 
-fun readFileFromZip(zipFilePath: String, fileName: String): ByteArray? {
-    ZipFile(File(zipFilePath)).use { zipFile ->
-        val entry: ZipEntry? = zipFile.getEntry(fileName)
-        return entry?.let {
-            zipFile.getInputStream(it).use { inputStream ->
-                ByteArrayOutputStream().use { outputStream ->
-                    val buffer = ByteArray(8192) // 8 KB buffer
-                    var bytesRead: Int
-                    while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                        outputStream.write(buffer, 0, bytesRead)
+        // Create a unique filename based on the entry name
+        val sanitizedName = entryName.replace('/', '_').replace('\\', '_')
+        val tempFile = File(tempDir, sanitizedName)
+
+        // Force extraction for each new manga by not reusing existing files
+        ZipFile(zipFilePath).use { zipFile ->
+            val entry = zipFile.getEntry(entryName)
+            if (entry != null && !entry.isDirectory) {
+                zipFile.getInputStream(entry).use { input ->
+                    tempFile.outputStream().use { output ->
+                        input.copyTo(output)
                     }
-                    outputStream.toByteArray() // Convert to ByteArray and return
                 }
+
+                // Verify the file was created successfully
+                if (tempFile.exists() && tempFile.length() > 0) {
+                    tempFile
+                } else {
+                    Log.e("MangaView", "Failed to extract: $entryName (Empty file)")
+                    null
+                }
+            } else {
+                Log.e("MangaView", "Entry not found or is directory: $entryName")
+                null
             }
         }
+    } catch (e: Exception) {
+        Log.e("MangaView", "Error extracting image: $entryName", e)
+        null
     }
 }
 
-fun extractImageFromZip(zipFilePath: String, fileName: String, context: Context): File? {
-    val tempFile = File(context.cacheDir, fileName)
-
-    ZipFile(File(zipFilePath)).use { zipFile ->
-        val entry: ZipEntry? = zipFile.getEntry(fileName)
-        entry?.let {
-            zipFile.getInputStream(it).use { inputStream ->
-                tempFile.outputStream().use { outputStream ->
-                    val buffer = ByteArray(8192) // 8KB buffer
-                    var bytesRead: Int
-                    while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                        outputStream.write(buffer, 0, bytesRead)
-                    }
-                }
-            }
-            return tempFile
-        }
-    }
-    return null
-}
-
-
-//fun readFileFromZip(zipFilePath: String, fileName: String): ByteArray? {
-//    ZipFile(File(zipFilePath)).use { zipFile ->
-//        val entry: ZipEntry? = zipFile.getEntry(fileName)
-//        return entry?.let {
-//            zipFile.getInputStream(it).use { inputStream ->
-//                inputStream.readBytes()
-//            }
-//        }
-//    }
-//}
-
-
+// This function remains unchanged
 fun getZipFileEntries(zipFilePath: String): List<ZipEntry> {
-    val zipFile = ZipFile(File(zipFilePath))
-    val entries = zipFile.entries().toList()
+    val zipEntries = mutableListOf<ZipEntry>()
+    try {
+        ZipFile(zipFilePath).use { zipFile ->
+            val entries = zipFile.entries()
+            while (entries.hasMoreElements()) {
+                val entry = entries.nextElement()
+                if (!entry.isDirectory && isImageFile(entry.name)) {
+                    zipEntries.add(entry)
+                }
+            }
+        }
+    } catch (e: Exception) {
+        Log.e("MangaView", "Error reading zip file", e)
+    }
 
-    return entries;
+    // Sort entries by name for correct order
+    return zipEntries.sortedBy { it.name.lowercase() }
 }
