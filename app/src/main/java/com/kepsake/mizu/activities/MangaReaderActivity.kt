@@ -20,7 +20,7 @@ class MangaReaderActivity : ComponentActivity() {
         setContent {
             MizuTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MangaView(images = getImages(), innerPadding)
+                    MangaView(innerPadding)
                 }
             }
         }
