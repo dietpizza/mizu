@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
+import com.kepsake.mizu.utils.isImageFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -193,11 +194,7 @@ suspend fun findFirstImageEntryName(context: Context, uri: Uri): String? =
                     while (entry != null) {
                         val entryName = entry.name.lowercase()
                         // Skip directories and non-image files
-                        if (!entry.isDirectory && (entryName.endsWith(".jpg") ||
-                                    entryName.endsWith(".jpeg") ||
-                                    entryName.endsWith(".png") ||
-                                    entryName.endsWith(".webp"))
-                        ) {
+                        if (!entry.isDirectory && isImageFile(entryName)) {
                             // Found an image, return immediately
                             return@withContext entry.name
                         }

@@ -1,6 +1,7 @@
 package com.kepsake.mizu.ui
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.clickable
@@ -30,6 +31,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import com.kepsake.mizu.activities.MangaReaderActivity
+import com.kepsake.mizu.utils.getPathFromUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,9 +45,14 @@ import java.util.zip.ZipInputStream
 @Composable
 fun MangaCard(comicFile: ComicFile, extractedCovers: MutableMap<String, File?>) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     var coverFile by remember { mutableStateOf<File?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+
+    fun onClick() {
+        val intent = Intent(context, MangaReaderActivity::class.java)
+        intent.putExtra("MANGA_PATH", getPathFromUri(context, comicFile.uri))
+        context.startActivity(intent)
+    }
 
     // Try to get the cover image file from cache or extract it
     LaunchedEffect(comicFile.id) {
@@ -73,11 +81,7 @@ fun MangaCard(comicFile: ComicFile, extractedCovers: MutableMap<String, File?>) 
             .fillMaxWidth()
             .aspectRatio(2 / 3f)
             .clickable {
-                // Handle opening comic
-                coroutineScope.launch {
-                    // Navigation to reader would go here
-                    Log.d("Library", "Opening comic: ${comicFile.fileName}")
-                }
+                onClick()
             }
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
