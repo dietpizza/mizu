@@ -22,7 +22,7 @@ class MangaReaderActivity : ComponentActivity() {
             setContent {
                 MizuTheme {
                     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                        MangaView(innerPadding)
+                        MangaView(innerPadding, initialFilePath = mangaPath)
                     }
                 }
             }
