@@ -21,7 +21,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,7 +33,6 @@ import coil.request.ImageRequest
 import com.kepsake.mizu.activities.MangaReaderActivity
 import com.kepsake.mizu.utils.getPathFromUri
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okio.IOException
 import java.io.BufferedInputStream
@@ -43,32 +41,32 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 @Composable
-fun MangaCard(comicFile: ComicFile, extractedCovers: MutableMap<String, File?>) {
+fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) {
     val context = LocalContext.current
     var coverFile by remember { mutableStateOf<File?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
     fun onClick() {
         val intent = Intent(context, MangaReaderActivity::class.java)
-        intent.putExtra("MANGA_PATH", getPathFromUri(context, comicFile.uri))
+        intent.putExtra("MANGA_PATH", getPathFromUri(context, mangaFile.uri))
         context.startActivity(intent)
     }
 
     // Try to get the cover image file from cache or extract it
-    LaunchedEffect(comicFile.id) {
+    LaunchedEffect(mangaFile.id) {
         isLoading = true
-        coverFile = extractedCovers[comicFile.id] ?: withContext(Dispatchers.IO) {
+        coverFile = extractedCovers[mangaFile.id] ?: withContext(Dispatchers.IO) {
             try {
                 val file = extractImageFromZip(
                     context,
-                    comicFile.uri,
-                    comicFile.firstImageEntry,
-                    comicFile.id
+                    mangaFile.uri,
+                    mangaFile.firstImageEntry,
+                    mangaFile.id
                 )
-                extractedCovers[comicFile.id] = file
+                extractedCovers[mangaFile.id] = file
                 file
             } catch (e: Exception) {
-                Log.e("Library", "Error extracting cover for ${comicFile.fileName}", e)
+                Log.e("Library", "Error extracting cover for ${mangaFile.fileName}", e)
                 null
             }
         }
@@ -91,11 +89,11 @@ fun MangaCard(comicFile: ComicFile, extractedCovers: MutableMap<String, File?>) 
                     ImageRequest.Builder(context)
                         .data(it)
                         .crossfade(true)
-                        .diskCacheKey("${comicFile.id}_cover")
-                        .memoryCacheKey("${comicFile.id}_cover")
+                        .diskCacheKey("${mangaFile.id}_cover")
+                        .memoryCacheKey("${mangaFile.id}_cover")
                         .build()
                 },
-                contentDescription = comicFile.fileName,
+                contentDescription = mangaFile.fileName,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
                 loading = {
@@ -129,7 +127,7 @@ fun MangaCard(comicFile: ComicFile, extractedCovers: MutableMap<String, File?>) 
                     .align(Alignment.BottomCenter)
             ) {
                 Text(
-                    text = comicFile.fileName,
+                    text = mangaFile.fileName,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White,
                     modifier = Modifier.padding(8.dp)

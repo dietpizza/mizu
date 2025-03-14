@@ -27,7 +27,7 @@ import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
-data class ComicFile(
+data class MangaFile(
     val uri: Uri,
     val fileName: String,
     val firstImageEntry: String,
@@ -36,12 +36,12 @@ data class ComicFile(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Library(innerPadding: PaddingValues = PaddingValues()) {
+fun LibraryView(innerPadding: PaddingValues = PaddingValues()) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     var isLoading by remember { mutableStateOf(false) }
-    var comicFiles by remember { mutableStateOf<List<ComicFile>>(emptyList()) }
+    var mangaFiles by remember { mutableStateOf<List<MangaFile>>(emptyList()) }
     var currentDirectoryUri by remember { mutableStateOf<Uri?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -72,7 +72,7 @@ fun Library(innerPadding: PaddingValues = PaddingValues()) {
                     } else {
                         comicUris.forEach {
                             processManga(context, it)?.let {
-                                comicFiles += it
+                                mangaFiles += it
                             }
                         }
                     }
@@ -109,7 +109,7 @@ fun Library(innerPadding: PaddingValues = PaddingValues()) {
                 }
             }
 
-            comicFiles.isEmpty() -> {
+            mangaFiles.isEmpty() -> {
                 Column(
                     modifier = Modifier.align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -138,7 +138,7 @@ fun Library(innerPadding: PaddingValues = PaddingValues()) {
                         )
                         .fillMaxSize()
                 ) {
-                    items(comicFiles, key = { it.id }) { comicFile ->
+                    items(mangaFiles, key = { it.id }) { comicFile ->
                         MangaCard(comicFile, extractedCovers)
                     }
                 }
@@ -154,7 +154,7 @@ fun Library(innerPadding: PaddingValues = PaddingValues()) {
     }
 }
 
-suspend fun processManga(context: Context, uri: Uri): ComicFile? =
+suspend fun processManga(context: Context, uri: Uri): MangaFile? =
     withContext(Dispatchers.IO) {
         try {
             val fileName = getFileName(context, uri) ?: "Unknown"
@@ -164,7 +164,7 @@ suspend fun processManga(context: Context, uri: Uri): ComicFile? =
             val id = UUID.randomUUID().toString()
 
             firstImageEntry?.let {
-                return@withContext ComicFile(uri, fileName, it, id)
+                return@withContext MangaFile(uri, fileName, it, id)
             }
         } catch (e: Exception) {
             // Log error but continue processing other files

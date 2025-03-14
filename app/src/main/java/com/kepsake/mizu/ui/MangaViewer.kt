@@ -30,20 +30,22 @@ import java.io.File
 import java.util.UUID
 import java.util.zip.ZipEntry
 import androidx.compose.foundation.lazy.items
+import kotlinx.coroutines.delay
 
 
 @Composable
 fun MangaViewer(innerPadding: PaddingValues, initialFilePath: String?) {
     val context = LocalContext.current
-    var filePath by remember { mutableStateOf(initialFilePath ?: "") }
+    val filePath by remember { mutableStateOf(initialFilePath ?: "") }
     var imagesInside by remember { mutableStateOf(emptyList<ZipEntry>()) }
     var isLoading by remember { mutableStateOf(false) }
     var currentMangaId by remember { mutableStateOf("") }
     val lazyListState = rememberLazyListState()
     val extractedImages = remember { mutableStateMapOf<String, File?>() }
 
+
     LaunchedEffect(filePath) {
-        if (!filePath.isNullOrEmpty()) {
+        if (filePath.isNotEmpty()) {
             isLoading = true
             CoroutineScope(Dispatchers.IO).launch {
                 val newMangaId = UUID.randomUUID().toString()
