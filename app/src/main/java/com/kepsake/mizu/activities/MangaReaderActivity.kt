@@ -14,15 +14,18 @@ import com.kepsake.mizu.ui.theme.MizuTheme
 
 class MangaReaderActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        val mangaPath = intent.getStringExtra("MANGA_PATH")
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            MizuTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MangaView(innerPadding)
+        if (mangaPath != null)
+            setContent {
+                MizuTheme {
+                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        MangaView(innerPadding)
+                    }
                 }
             }
-        }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 finish() // Ensures the activity is destroyed when navigating back

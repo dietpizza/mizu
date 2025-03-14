@@ -52,7 +52,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.UUID
 import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
 
 @Composable
 fun MangaView(innerPadding: PaddingValues) {
@@ -234,63 +233,5 @@ fun MangaView(innerPadding: PaddingValues) {
             }
         }
     }
-}
-
-@Composable
-fun MangaPanel(
-    zipFilePath: String,
-    zipEntry: ZipEntry,
-    extractedImages: MutableMap<String, File?>,
-    mangaId: String
-) {
-    val context = LocalContext.current
-    var imageFile by remember { mutableStateOf<File?>(null) }
-
-    // Get the file from the cache map or extract it if needed
-    LaunchedEffect(zipEntry, mangaId) {
-        imageFile = extractedImages[zipEntry.name] ?: withContext(Dispatchers.IO) {
-            val file = extractImageFromZip(zipFilePath, zipEntry.name, context, mangaId)
-            extractedImages[zipEntry.name] = file
-            file
-        }
-    }
-
-    SubcomposeAsyncImage(
-        model = imageFile?.let {
-            ImageRequest.Builder(context)
-                .data(it)
-                .crossfade(true)
-                .diskCacheKey("${mangaId}_${zipEntry.name}")  // Use mangaId in cache key
-                .memoryCacheKey("${mangaId}_${zipEntry.name}") // Use mangaId in cache key
-                .build()
-        },
-        contentDescription = null,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 8.dp),
-        contentScale = ContentScale.FillWidth,
-        loading = {
-            Card(
-                modifier = Modifier
-                    .height(600.dp)
-                    .fillMaxWidth(),
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(50.dp)
-                )
-            }
-        },
-        error = {
-            Card(
-                modifier = Modifier
-                    .height(600.dp)
-                    .fillMaxWidth(),
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(50.dp)
-                )
-            }
-        },
-    )
 }
 
