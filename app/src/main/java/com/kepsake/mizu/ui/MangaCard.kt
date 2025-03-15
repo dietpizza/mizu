@@ -37,20 +37,21 @@ import kotlinx.coroutines.withContext
 import okio.IOException
 import java.io.BufferedInputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 
 
 @Composable
-fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) {
+fun MangaCard(mangaFile: MangaFile2, extractedCovers: MutableMap<String, File?>) {
     val context = LocalContext.current
     var coverFile by remember { mutableStateOf<File?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
     fun onClick() {
         val intent = Intent(context, MangaReaderActivity::class.java)
-        intent.putExtra("MANGA_PATH", getFilePathFromUri(context, mangaFile.uri))
+        intent.putExtra("MANGA_PATH", mangaFile.path)
         context.startActivity(intent)
     }
 
@@ -61,7 +62,7 @@ fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) 
             try {
                 val file = extractImageFromZip(
                     context,
-                    mangaFile.uri,
+                    mangaFile.path,
                     mangaFile.firstImageEntry,
                     mangaFile.id
                 )
@@ -141,7 +142,7 @@ fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) 
 
 suspend fun extractImageFromZip(
     context: Context,
-    uri: Uri,
+    path: String,
     entryName: String,
     cacheId: String
 ): File? = withContext(Dispatchers.IO) {
@@ -155,39 +156,16 @@ suspend fun extractImageFromZip(
         // Create a file for the extracted image
         val outputFile = File(cacheDir, sanitizeFileName(entryName))
 
-        // If the file already exists, just return it
+        val firstImage = findFirstImageEntryName(path)
+
+        if (firstImage != null) {
+            extractEntryToFile(path, firstImage, outputFile)
+        }
+
         if (outputFile.exists() && outputFile.length() > 0) {
             return@withContext outputFile
         }
 
-        val bufferSize = 8 * 1024 // 8KB buffer
-        val path = getFilePathFromUri(context, uri)
-        if (path != null) {
-            val zipFile = ZipFile(File(path))
-            val entries = zipFile.entries();
-
-            val fileList = entries.toList().map { it.name }
-
-        }
-
-
-        // Extract the image
-        context.contentResolver.openInputStream(uri)?.use { inputStream ->
-            ZipInputStream(BufferedInputStream(inputStream)).use { zipInputStream ->
-                var entry: ZipEntry? = zipInputStream.nextEntry
-                while (entry != null) {
-                    if (entry.name == entryName) {
-                        // Found the image, extract it
-                        outputFile.outputStream().buffered().use { output ->
-                            zipInputStream.copyTo(output, bufferSize)
-                        }
-                        return@withContext outputFile
-                    }
-                    zipInputStream.closeEntry()
-                    entry = zipInputStream.nextEntry
-                }
-            }
-        }
         null
     } catch (e: IOException) {
         Log.e("Library", "I/O error extracting image: $entryName", e)
@@ -200,5 +178,33 @@ suspend fun extractImageFromZip(
 
 fun sanitizeFileName(fileName: String): String {
     return fileName.replace(Regex("[^a-zA-Z0-9.-]"), "_")
+}
+
+fun extractEntryToFile(zipFilePath: String, entryName: String, destinationFile: File): Boolean {
+    return try {
+        ZipFile(zipFilePath).use { zipFile ->
+            // Get the specific entry
+            val entry = zipFile.getEntry(entryName) ?: return false
+
+            // Open input stream for the entry
+            zipFile.getInputStream(entry).use { inputStream ->
+                // Create output stream for the destination file
+                FileOutputStream(destinationFile).use { outputStream ->
+                    // Transfer data from entry to file
+//                    val buffer = ByteArray(8 * 1024)
+//                    var bytesRead: Int
+                    inputStream.copyTo(outputStream, 8 * 1024)
+
+//                    while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+//                        outputStream.write(buffer, 0, bytesRead)
+//                    }
+                }
+            }
+        }
+        true
+    } catch (e: Exception) {
+        e.printStackTrace()
+        false
+    }
 }
 
