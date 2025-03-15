@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.documentfile.provider.DocumentFile
 import com.kepsake.mizu.logic.NaturalOrderComparator
 import com.kepsake.mizu.utils.getFilePathFromUri
 import com.kepsake.mizu.utils.getMangaFiles
@@ -28,12 +27,6 @@ import java.io.File
 import java.util.*
 import java.util.zip.ZipFile
 
-data class MangaFile(
-    val uri: Uri,
-    val fileName: String,
-    val firstImageEntry: String,
-    val id: String // Added UUID for cache management
-)
 
 data class MangaFile2(
     val path: String,
@@ -49,8 +42,7 @@ fun LibraryView(innerPadding: PaddingValues = PaddingValues()) {
     val coroutineScope = rememberCoroutineScope()
 
     var isLoading by remember { mutableStateOf(false) }
-    var mangaFiles by remember { mutableStateOf<List<MangaFile>>(emptyList()) }
-    var mangaFiles2 by remember { mutableStateOf<List<MangaFile2>>(emptyList()) }
+    var mangaFiles by remember { mutableStateOf<List<MangaFile2>>(emptyList()) }
     var currentDirectoryUri by remember { mutableStateOf<Uri?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -77,25 +69,15 @@ fun LibraryView(innerPadding: PaddingValues = PaddingValues()) {
                 try {
                     val path = getFilePathFromUri(context, uri)
                     if (path != null) {
-                        val mangaUris = scanForManga(context, path)
+                        val mangaUris = scanForManga(path)
                         mangaUris.forEach {
                             Log.e("ROHAN", "Manga: $it")
-                            processManga2(it)?.let {
-                                mangaFiles2 += it
+                            processManga(it)?.let {
+                                mangaFiles += it
                             }
                         }
                     }
 
-//                    val comicUris = scanDirectoryForManga(context, it)
-//                    if (comicUris.isEmpty()) {
-//                        errorMessage = "No comic files found in this folder"
-//                    } else {
-//                        comicUris.forEach {
-//                            processManga(context, it)?.let {
-//                                mangaFiles += it
-//                            }
-//                        }
-//                    }
                 } catch (e: Exception) {
                     errorMessage = "Error loading files: ${e.message}"
                     Log.e("Library", "Error processing directory", e)
@@ -129,7 +111,7 @@ fun LibraryView(innerPadding: PaddingValues = PaddingValues()) {
                 }
             }
 
-            mangaFiles2.isEmpty() -> {
+            mangaFiles.isEmpty() -> {
                 Column(
                     modifier = Modifier.align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -158,7 +140,7 @@ fun LibraryView(innerPadding: PaddingValues = PaddingValues()) {
                         )
                         .fillMaxSize()
                 ) {
-                    items(mangaFiles2, key = { it.id }) { comicFile ->
+                    items(mangaFiles, key = { it.id }) { comicFile ->
                         MangaCard(comicFile, extractedCovers)
                     }
                 }
@@ -174,7 +156,7 @@ fun LibraryView(innerPadding: PaddingValues = PaddingValues()) {
     }
 }
 
-suspend fun processManga2(path: String): MangaFile2? =
+suspend fun processManga(path: String): MangaFile2? =
     withContext(Dispatchers.IO) {
         try {
             val fileName = File(path).name
@@ -194,30 +176,7 @@ suspend fun processManga2(path: String): MangaFile2? =
         }
     }
 
-suspend fun processManga(context: Context, uri: Uri): MangaFile? =
-    withContext(Dispatchers.IO) {
-        try {
-            val path = getFilePathFromUri(context, uri)
-            if (path != null) {
-                val fileName = File(path).name
-                val firstImageEntry = findFirstImageEntryName(path)
-
-                // Generate unique ID for each comic file for caching
-                val id = UUID.randomUUID().toString()
-
-                firstImageEntry?.let {
-                    return@withContext MangaFile(uri, fileName, it, id)
-                }
-            }
-            null
-        } catch (e: Exception) {
-            // Log error but continue processing other files
-            Log.e("Library", "Error processing file $uri", e)
-            null
-        }
-    }
-
-suspend fun scanForManga(context: Context, path: String): List<String> =
+suspend fun scanForManga(path: String): List<String> =
     withContext(Dispatchers.IO) {
         getMangaFiles(path).map { it["path"] as String }.toList()
     }
@@ -236,31 +195,4 @@ suspend fun findFirstImageEntryName(path: String): String? =
             Log.e("Library", "Error finding first image in zip", e)
         }
         null
-    }
-
-
-suspend fun scanDirectoryForManga(context: Context, directoryUri: Uri): List<Uri> =
-    withContext(Dispatchers.IO) {
-        val comicUris = mutableListOf<Uri>()
-
-        try {
-            val directory = DocumentFile.fromTreeUri(context, directoryUri)
-
-            directory?.listFiles()?.forEach { file ->
-                if (!file.isDirectory) {
-                    val name = file.name?.lowercase() ?: ""
-                    val mimeType = file.type
-
-                    if (name.endsWith(".cbz") || name.endsWith(".zip") ||
-                        mimeType == "application/zip" || mimeType == "application/x-cbz"
-                    ) {
-                        comicUris.add(file.uri)
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("Library", "Error scanning directory", e)
-        }
-
-        comicUris
     }
