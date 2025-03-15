@@ -34,8 +34,6 @@ import com.kepsake.mizu.utils.extractImageFromZip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
-import java.util.zip.ZipFile
 
 
 @Composable
@@ -50,7 +48,6 @@ fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) 
         context.startActivity(intent)
     }
 
-    // Try to get the cover image file from cache or extract it
     LaunchedEffect(mangaFile.id) {
         isLoading = true
         coverFile = extractedCovers[mangaFile.id] ?: withContext(Dispatchers.IO) {
@@ -77,12 +74,9 @@ fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) 
             .padding(8.dp)
             .fillMaxWidth()
             .aspectRatio(2 / 3f)
-            .clickable {
-                onClick()
-            }
+            .clickable { onClick() }
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Use Coil's SubcomposeAsyncImage for loading with placeholders
             SubcomposeAsyncImage(
                 model = coverFile?.let {
                     ImageRequest.Builder(context)
@@ -118,7 +112,6 @@ fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) 
                 }
             )
 
-            // Title overlay at bottom
             Surface(
                 color = Color.Black.copy(alpha = 0.6f),
                 modifier = Modifier
