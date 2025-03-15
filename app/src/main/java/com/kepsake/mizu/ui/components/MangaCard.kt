@@ -1,4 +1,4 @@
-package com.kepsake.mizu.ui
+package com.kepsake.mizu.ui.components
 
 import android.content.Intent
 import android.util.Log

@@ -1,4 +1,4 @@
-package com.kepsake.mizu.ui
+package com.kepsake.mizu.ui.screens
 
 import UserDataStore
 import android.content.Intent
@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kepsake.mizu.logic.NaturalOrderComparator
 import com.kepsake.mizu.data.models.MangaFile
 import com.kepsake.mizu.data.viewmodels.MangaViewModel
+import com.kepsake.mizu.ui.components.MangaCard
 import com.kepsake.mizu.utils.getFilePathFromUri
 import com.kepsake.mizu.utils.getMangaFiles
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +32,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.*
 import java.util.zip.ZipFile
-import kotlin.reflect.typeOf
 
 
 @OptIn(ExperimentalMaterial3Api::class)

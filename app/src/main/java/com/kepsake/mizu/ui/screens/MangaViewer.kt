@@ -1,4 +1,4 @@
-package com.kepsake.mizu.ui
+package com.kepsake.mizu.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.kepsake.mizu.ui.components.MangaPanel
 import com.kepsake.mizu.utils.clearPreviousMangaCache
 import com.kepsake.mizu.utils.extractImageFromZip
 import com.kepsake.mizu.utils.getZipFileEntries
