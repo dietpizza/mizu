@@ -162,7 +162,6 @@ suspend fun extractImageFromZip(
 
         val bufferSize = 8 * 1024 // 8KB buffer
         val path = getFilePathFromUri(context, uri)
-        Log.e("ROHAN", "Path $path")
         if (path != null) {
             val zipFile = ZipFile(File(path))
             val entries = zipFile.entries();
