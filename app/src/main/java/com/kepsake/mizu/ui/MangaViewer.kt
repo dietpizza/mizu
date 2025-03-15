@@ -124,7 +124,7 @@ fun MangaViewer(innerPadding: PaddingValues, initialFilePath: String?) {
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(60.dp),
+                        modifier = Modifier.size(50.dp),
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(

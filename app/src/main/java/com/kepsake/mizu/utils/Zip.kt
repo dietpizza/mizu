@@ -2,6 +2,7 @@ package com.kepsake.mizu.utils
 
 import android.content.Context
 import android.util.Log
+import com.kepsake.mizu.logic.NaturalOrderComparator
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -53,21 +54,18 @@ fun extractImageFromZip(
 
 // This function remains unchanged
 fun getZipFileEntries(zipFilePath: String): List<ZipEntry> {
-    val zipEntries = mutableListOf<ZipEntry>()
     try {
         ZipFile(zipFilePath).use { zipFile ->
-            val entries = zipFile.entries()
-            while (entries.hasMoreElements()) {
-                val entry = entries.nextElement()
-                if (!entry.isDirectory && isImageFile(entry.name)) {
-                    zipEntries.add(entry)
-                }
-            }
+            val entries =
+                zipFile.entries().asSequence().filter { !it.isDirectory && isImageFile(it.name) }
+                    .toList().sortedWith(compareBy(NaturalOrderComparator()) { it.name })
+
+            return entries
         }
     } catch (e: Exception) {
         Log.e("MangaView", "Error reading zip file", e)
     }
 
     // Sort entries by name for correct order
-    return zipEntries.sortedBy { it.name.lowercase() }
+    return emptyList()
 }
