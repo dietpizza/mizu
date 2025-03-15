@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
-import android.util.Log
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -17,7 +16,7 @@ fun isImageFile(fileName: String): Boolean {
     return extensions.any { fileName.lowercase().endsWith(it) }
 }
 
-fun getArchiveFiles(dirPath: String): List<Map<String, Any>> {
+fun getMangaFiles(dirPath: String): List<Map<String, Any>> {
     val directory = File(dirPath)
 
     if (!directory.exists() || !directory.isDirectory) {
@@ -46,7 +45,6 @@ fun getArchiveFiles(dirPath: String): List<Map<String, Any>> {
 }
 
 fun getFilePathFromUri(context: Context, uri: Uri): String? {
-    Log.e("ROHAN", "Scheme ${uri.scheme} ${uri.authority}")
     // Handle content:// scheme
     if (uri.scheme == "content") {
         // For media content URIs
@@ -60,16 +58,28 @@ fun getFilePathFromUri(context: Context, uri: Uri): String? {
             }
         }
         if ("com.android.externalstorage.documents" == uri.authority) {
-            val docId = DocumentsContract.getDocumentId(uri)
-            val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-            val type = split[0]
-
-            return if ("primary".equals(type, ignoreCase = true)) {
-                Environment.getExternalStorageDirectory().toString() + "/" + split[1]
-            } else {
-                // Handle secondary storage or SD card
-                // This might vary by device
-                "/storage/" + type + "/" + split[1]
+            // Check first if it's a document URI
+            if (DocumentsContract.isDocumentUri(context, uri)) {
+                // Original code for document URIs
+                val docId = DocumentsContract.getDocumentId(uri)
+                val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                val type = split[0]
+                return if ("primary".equals(type, ignoreCase = true)) {
+                    Environment.getExternalStorageDirectory().toString() + "/" + split[1]
+                } else {
+                    "/storage/" + type + "/" + split[1]
+                }
+            } else if (DocumentsContract.isTreeUri(uri)) {
+                val treeId = DocumentsContract.getTreeDocumentId(uri)
+                val split =
+                    treeId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                val type = split[0]
+                return if ("primary".equals(type, ignoreCase = true)) {
+                    Environment.getExternalStorageDirectory().toString() + "/" + split[1]
+                } else {
+                    // Handle secondary storage or SD card
+                    "/storage/" + type + "/" + split[1]
+                }
             }
         }
 
