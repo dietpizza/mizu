@@ -18,14 +18,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
-import com.kepsake.mizu.utils.isImageFile
+import com.kepsake.mizu.logic.NaturalOrderComparator
+import com.kepsake.mizu.utils.getFilePathFromUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.*
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
+import java.util.zip.ZipFile
 
 data class MangaFile(
     val uri: Uri,
@@ -66,7 +66,7 @@ fun LibraryView(innerPadding: PaddingValues = PaddingValues()) {
 
             coroutineScope.launch {
                 try {
-                    val comicUris = findComicFilesInDirectory(context, it)
+                    val comicUris = scanDirectoryForManga(context, it)
                     if (comicUris.isEmpty()) {
                         errorMessage = "No comic files found in this folder"
                     } else {
@@ -157,15 +157,19 @@ fun LibraryView(innerPadding: PaddingValues = PaddingValues()) {
 suspend fun processManga(context: Context, uri: Uri): MangaFile? =
     withContext(Dispatchers.IO) {
         try {
-            val fileName = getFileName(context, uri) ?: "Unknown"
-            val firstImageEntry = findFirstImageEntryName(context, uri)
+            val path = getFilePathFromUri(context, uri)
+            if (path != null) {
+                val fileName = File(path).name
+                val firstImageEntry = findFirstImageEntryName(path)
 
-            // Generate unique ID for each comic file for caching
-            val id = UUID.randomUUID().toString()
+                // Generate unique ID for each comic file for caching
+                val id = UUID.randomUUID().toString()
 
-            firstImageEntry?.let {
-                return@withContext MangaFile(uri, fileName, it, id)
+                firstImageEntry?.let {
+                    return@withContext MangaFile(uri, fileName, it, id)
+                }
             }
+            null
         } catch (e: Exception) {
             // Log error but continue processing other files
             Log.e("Library", "Error processing file $uri", e)
@@ -173,47 +177,33 @@ suspend fun processManga(context: Context, uri: Uri): MangaFile? =
         }
     }
 
-fun getFileName(context: Context, uri: Uri): String? {
-    val cursor = context.contentResolver.query(uri, null, null, null, null)
-    return cursor?.use {
-        val nameIndex = it.getColumnIndex("_display_name")
-        if (nameIndex >= 0 && it.moveToFirst()) {
-            it.getString(nameIndex)
-        } else null
-    } ?: uri.lastPathSegment
-}
+//fun getFileName(context: Context, uri: Uri): String? {
+//    val cursor = context.contentResolver.query(uri, null, null, null, null)
+//    return cursor?.use {
+//        val nameIndex = it.getColumnIndex("_display_name")
+//        if (nameIndex >= 0 && it.moveToFirst()) {
+//            it.getString(nameIndex)
+//        } else null
+//    } ?: uri.lastPathSegment
+//}
 
-suspend fun findFirstImageEntryName(context: Context, uri: Uri): String? =
+suspend fun findFirstImageEntryName(path: String): String? =
     withContext(Dispatchers.IO) {
         try {
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                ZipInputStream(inputStream).use { zipInputStream ->
-                    var entry: ZipEntry? = zipInputStream.nextEntry
+            val zipFile = ZipFile(File(path))
+            val entries = zipFile.entries();
+            val fileList = entries.toList().map { it.name }.sortedWith(NaturalOrderComparator())
 
-                    // Just find the first image without collecting all entries
-                    while (entry != null) {
-                        val entryName = entry.name.lowercase()
-                        // Skip directories and non-image files
-                        if (!entry.isDirectory && isImageFile(entryName)) {
-                            // Found an image, return immediately
-                            return@withContext entry.name
-                        }
-                        zipInputStream.closeEntry()
-                        entry = zipInputStream.nextEntry
-                    }
+            return@withContext fileList.firstOrNull()
 
-                    // No images found
-                    null
-                }
-            }
         } catch (e: Exception) {
             Log.e("Library", "Error finding first image in zip", e)
-            null
         }
+        null
     }
 
 
-suspend fun findComicFilesInDirectory(context: Context, directoryUri: Uri): List<Uri> =
+suspend fun scanDirectoryForManga(context: Context, directoryUri: Uri): List<Uri> =
     withContext(Dispatchers.IO) {
         val comicUris = mutableListOf<Uri>()
 

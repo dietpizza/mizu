@@ -31,14 +31,16 @@ import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.kepsake.mizu.activities.MangaReaderActivity
-import com.kepsake.mizu.utils.getPathFromUri
+import com.kepsake.mizu.utils.getFilePathFromUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.IOException
 import java.io.BufferedInputStream
 import java.io.File
 import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
+
 
 @Composable
 fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) {
@@ -48,7 +50,7 @@ fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) 
 
     fun onClick() {
         val intent = Intent(context, MangaReaderActivity::class.java)
-        intent.putExtra("MANGA_PATH", getPathFromUri(context, mangaFile.uri))
+        intent.putExtra("MANGA_PATH", getFilePathFromUri(context, mangaFile.uri))
         context.startActivity(intent)
     }
 
@@ -158,8 +160,17 @@ suspend fun extractImageFromZip(
             return@withContext outputFile
         }
 
-        // Use a more efficient buffer size for copying
         val bufferSize = 8 * 1024 // 8KB buffer
+        val path = getFilePathFromUri(context, uri)
+        Log.e("ROHAN", "Path $path")
+        if (path != null) {
+            val zipFile = ZipFile(File(path))
+            val entries = zipFile.entries();
+
+            val fileList = entries.toList().map { it.name }
+
+        }
+
 
         // Extract the image
         context.contentResolver.openInputStream(uri)?.use { inputStream ->
