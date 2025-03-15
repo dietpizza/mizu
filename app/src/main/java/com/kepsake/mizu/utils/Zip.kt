@@ -9,14 +9,15 @@ import java.util.zip.ZipFile
 
 // Modified to create a temporary file in the app's cache directory with manga ID
 fun extractImageFromZip(
+    context: Context,
     zipFilePath: String,
     entryName: String,
-    context: Context,
-    mangaId: String
+    mangaId: String,
+    cachePath: String
 ): File? {
     return try {
         // Create a directory for this specific manga using the manga ID
-        val tempDir = File(context.cacheDir, "manga_images/$mangaId").apply {
+        val tempDir = File(context.cacheDir, "${cachePath}/$mangaId").apply {
             if (!exists()) mkdirs()
         }
 

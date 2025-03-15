@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.kepsake.mizu.activities.MangaReaderActivity
+import com.kepsake.mizu.utils.extractImageFromZip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.IOException
@@ -59,7 +60,8 @@ fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) 
                     context,
                     mangaFile.path,
                     mangaFile.firstImageEntry,
-                    mangaFile.id
+                    mangaFile.id,
+                    "covers"
                 )
                 extractedCovers[mangaFile.id] = file
                 file
@@ -135,41 +137,41 @@ fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) 
     }
 }
 
-suspend fun extractImageFromZip(
-    context: Context,
-    path: String,
-    entryName: String,
-    cacheId: String
-): File? = withContext(Dispatchers.IO) {
-    try {
-        // Create a cache directory for this specific comic
-        val cacheDir = File(context.cacheDir, "mangas/$cacheId")
-        if (!cacheDir.exists()) {
-            cacheDir.mkdirs()
-        }
-
-        // Create a file for the extracted image
-        val outputFile = File(cacheDir, sanitizeFileName(entryName))
-
-        val firstImage = findFirstImageEntryName(path)
-
-        if (firstImage != null) {
-            extractEntryToFile(path, firstImage, outputFile)
-        }
-
-        if (outputFile.exists() && outputFile.length() > 0) {
-            return@withContext outputFile
-        }
-
-        null
-    } catch (e: IOException) {
-        Log.e("Library", "I/O error extracting image: $entryName", e)
-        null
-    } catch (e: Exception) {
-        Log.e("Library", "Error extracting image: $entryName", e)
-        null
-    }
-}
+//suspend fun extractImageFromZip(
+//    context: Context,
+//    path: String,
+//    entryName: String,
+//    cacheId: String
+//): File? = withContext(Dispatchers.IO) {
+//    try {
+//        // Create a cache directory for this specific comic
+//        val cacheDir = File(context.cacheDir, "mangas/$cacheId")
+//        if (!cacheDir.exists()) {
+//            cacheDir.mkdirs()
+//        }
+//
+//        // Create a file for the extracted image
+//        val outputFile = File(cacheDir, sanitizeFileName(entryName))
+//
+//        val firstImage = findFirstImageEntryName(path)
+//
+//        if (firstImage != null) {
+//            extractEntryToFile(path, firstImage, outputFile)
+//        }
+//
+//        if (outputFile.exists() && outputFile.length() > 0) {
+//            return@withContext outputFile
+//        }
+//
+//        null
+//    } catch (e: IOException) {
+//        Log.e("Library", "I/O error extracting image: $entryName", e)
+//        null
+//    } catch (e: Exception) {
+//        Log.e("Library", "Error extracting image: $entryName", e)
+//        null
+//    }
+//}
 
 fun sanitizeFileName(fileName: String): String {
     return fileName.replace(Regex("[^a-zA-Z0-9.-]"), "_")

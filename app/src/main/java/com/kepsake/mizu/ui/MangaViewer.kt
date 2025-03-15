@@ -75,10 +75,11 @@ fun MangaViewer(innerPadding: PaddingValues, initialFilePath: String?) {
                     if (!extractedImages.containsKey(entry.name)) {
                         launch(Dispatchers.IO) {
                             extractImageFromZip(
+                                context,
                                 filePath,
                                 entry.name,
-                                context,
-                                currentMangaId
+                                currentMangaId,
+                                cachePath = "images"
                             ).let {
                                 extractedImages[entry.name] = it
                             }
