@@ -2,7 +2,6 @@ package com.kepsake.mizu.ui
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -31,20 +30,16 @@ import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.kepsake.mizu.activities.MangaReaderActivity
-import com.kepsake.mizu.utils.getFilePathFromUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.IOException
-import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
-import java.util.zip.ZipInputStream
 
 
 @Composable
-fun MangaCard(mangaFile: MangaFile2, extractedCovers: MutableMap<String, File?>) {
+fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) {
     val context = LocalContext.current
     var coverFile by remember { mutableStateOf<File?>(null) }
     var isLoading by remember { mutableStateOf(true) }

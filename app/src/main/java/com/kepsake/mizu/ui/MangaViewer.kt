@@ -104,7 +104,7 @@ fun MangaViewer(innerPadding: PaddingValues, initialFilePath: String?) {
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues.Absolute(
                     top = innerPadding.calculateTopPadding() + 8.dp,
-                    bottom = innerPadding.calculateBottomPadding() + 8.dp
+                    bottom = innerPadding.calculateBottomPadding() + 0.dp
                 ),
             ) {
                 items(items = imagesInside, key = { it.name }) { zipEntry ->

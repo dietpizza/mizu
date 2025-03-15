@@ -1,6 +1,5 @@
 package com.kepsake.mizu.ui
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -28,7 +27,7 @@ import java.util.*
 import java.util.zip.ZipFile
 
 
-data class MangaFile2(
+data class MangaFile(
     val path: String,
     val fileName: String,
     val firstImageEntry: String,
@@ -42,7 +41,7 @@ fun LibraryView(innerPadding: PaddingValues = PaddingValues()) {
     val coroutineScope = rememberCoroutineScope()
 
     var isLoading by remember { mutableStateOf(false) }
-    var mangaFiles by remember { mutableStateOf<List<MangaFile2>>(emptyList()) }
+    var mangaFiles by remember { mutableStateOf<List<MangaFile>>(emptyList()) }
     var currentDirectoryUri by remember { mutableStateOf<Uri?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -70,12 +69,7 @@ fun LibraryView(innerPadding: PaddingValues = PaddingValues()) {
                     val path = getFilePathFromUri(context, uri)
                     if (path != null) {
                         val mangaUris = scanForManga(path)
-                        mangaUris.forEach {
-                            Log.e("ROHAN", "Manga: $it")
-                            processManga(it)?.let {
-                                mangaFiles += it
-                            }
-                        }
+                        mangaFiles = mangaUris.mapNotNull { processManga(it) }
                     }
 
                 } catch (e: Exception) {
@@ -156,7 +150,7 @@ fun LibraryView(innerPadding: PaddingValues = PaddingValues()) {
     }
 }
 
-suspend fun processManga(path: String): MangaFile2? =
+suspend fun processManga(path: String): MangaFile? =
     withContext(Dispatchers.IO) {
         try {
             val fileName = File(path).name
@@ -166,7 +160,7 @@ suspend fun processManga(path: String): MangaFile2? =
             val id = UUID.randomUUID().toString()
 
             firstImageEntry?.let {
-                return@withContext MangaFile2(path, fileName, it, id)
+                return@withContext MangaFile(path, fileName, it, id)
             }
             null
         } catch (e: Exception) {
