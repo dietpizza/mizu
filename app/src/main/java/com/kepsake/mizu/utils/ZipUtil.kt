@@ -7,7 +7,6 @@ import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
-// Modified to create a temporary file in the app's cache directory with manga ID
 fun extractImageFromZip(
     context: Context,
     zipFilePath: String,

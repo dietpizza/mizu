@@ -1,6 +1,5 @@
 package com.kepsake.mizu.ui
 
-import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.clickable
@@ -26,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
@@ -33,7 +33,6 @@ import com.kepsake.mizu.activities.MangaReaderActivity
 import com.kepsake.mizu.utils.extractImageFromZip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okio.IOException
 import java.io.File
 import java.io.FileOutputStream
 import java.util.zip.ZipFile
@@ -130,78 +129,12 @@ fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) 
                     text = mangaFile.fileName,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White,
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier.padding(8.dp),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
-    }
-}
-
-//suspend fun extractImageFromZip(
-//    context: Context,
-//    path: String,
-//    entryName: String,
-//    cacheId: String
-//): File? = withContext(Dispatchers.IO) {
-//    try {
-//        // Create a cache directory for this specific comic
-//        val cacheDir = File(context.cacheDir, "mangas/$cacheId")
-//        if (!cacheDir.exists()) {
-//            cacheDir.mkdirs()
-//        }
-//
-//        // Create a file for the extracted image
-//        val outputFile = File(cacheDir, sanitizeFileName(entryName))
-//
-//        val firstImage = findFirstImageEntryName(path)
-//
-//        if (firstImage != null) {
-//            extractEntryToFile(path, firstImage, outputFile)
-//        }
-//
-//        if (outputFile.exists() && outputFile.length() > 0) {
-//            return@withContext outputFile
-//        }
-//
-//        null
-//    } catch (e: IOException) {
-//        Log.e("Library", "I/O error extracting image: $entryName", e)
-//        null
-//    } catch (e: Exception) {
-//        Log.e("Library", "Error extracting image: $entryName", e)
-//        null
-//    }
-//}
-
-fun sanitizeFileName(fileName: String): String {
-    return fileName.replace(Regex("[^a-zA-Z0-9.-]"), "_")
-}
-
-fun extractEntryToFile(zipFilePath: String, entryName: String, destinationFile: File): Boolean {
-    return try {
-        ZipFile(zipFilePath).use { zipFile ->
-            // Get the specific entry
-            val entry = zipFile.getEntry(entryName) ?: return false
-
-            // Open input stream for the entry
-            zipFile.getInputStream(entry).use { inputStream ->
-                // Create output stream for the destination file
-                FileOutputStream(destinationFile).use { outputStream ->
-                    // Transfer data from entry to file
-//                    val buffer = ByteArray(8 * 1024)
-//                    var bytesRead: Int
-                    inputStream.copyTo(outputStream, 8 * 1024)
-
-//                    while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-//                        outputStream.write(buffer, 0, bytesRead)
-//                    }
-                }
-            }
-        }
-        true
-    } catch (e: Exception) {
-        e.printStackTrace()
-        false
     }
 }
 
