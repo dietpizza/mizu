@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -56,6 +57,18 @@ dependencies {
     implementation libs.androidx.activity
     implementation libs.androidx.constraintlayout
     implementation libs.androidx.storage
+    implementation libs.androidx.datastore.preferences
+
+
+    // Room dependencies
+    implementation libs.androidx.room.runtime
+    implementation libs.androidx.room.ktx
+    implementation libs.androidx.runtime.livedata
+    ksp libs.androidx.room.compiler.v250
+
+    // LiveData & ViewModel dependencies
+    implementation libs.androidx.lifecycle.livedata.ktx
+    implementation libs.androidx.lifecycle.viewmodel.compose
 
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit

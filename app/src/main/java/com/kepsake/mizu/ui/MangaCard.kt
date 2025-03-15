@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.kepsake.mizu.activities.MangaReaderActivity
+import com.kepsake.mizu.data.models.MangaFile
 import com.kepsake.mizu.utils.extractImageFromZip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
