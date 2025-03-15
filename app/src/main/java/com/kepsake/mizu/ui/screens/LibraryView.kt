@@ -96,9 +96,7 @@ fun LibraryView(
     PullToRefreshBox(
         isRefreshing = isLoading,
         onRefresh = { },
-        Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp)
+        Modifier.fillMaxWidth(),
     ) {
         Box(
             modifier = Modifier.fillMaxSize()
@@ -162,13 +160,11 @@ fun LibraryView(
                 else -> {
                     LazyVerticalGrid(
                         columns = GridCells.Adaptive(minSize = 160.dp),
-                        contentPadding = PaddingValues(8.dp),
-                        modifier = Modifier
-                            .padding(
-                                top = innerPadding.calculateTopPadding(),
-                                bottom = innerPadding.calculateBottomPadding()
-                            )
-                            .fillMaxSize()
+                        contentPadding = PaddingValues(
+                            top = innerPadding.calculateTopPadding(),
+                            bottom = innerPadding.calculateBottomPadding()
+                        ),
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         items(mangaFiles, key = { it.id }) { comicFile ->
                             MangaCard(comicFile, extractedCovers)
