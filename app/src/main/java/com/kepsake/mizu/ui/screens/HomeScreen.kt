@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -56,7 +56,7 @@ fun HomeScreen(innerPadding: PaddingValues) {
         ) {
             NavigationBarItem(
                 selected = pagerState.currentPage == 0,
-                icon = { Icon(Icons.Rounded.Settings, contentDescription = "Library") },
+                icon = { Icon(Icons.Default.Home, contentDescription = "Library") },
                 onClick = { goToPage(0) },
             )
             NavigationBarItem(
