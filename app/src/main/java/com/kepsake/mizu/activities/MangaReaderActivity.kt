@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 
-import com.kepsake.mizu.ui.screens.MangaViewer
+import com.kepsake.mizu.ui.screens.MangaTab
 import com.kepsake.mizu.ui.theme.MizuTheme
 
 class MangaReaderActivity : ComponentActivity() {
@@ -22,7 +22,7 @@ class MangaReaderActivity : ComponentActivity() {
             setContent {
                 MizuTheme {
                     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                        MangaViewer(innerPadding, initialFilePath = mangaPath)
+                        MangaTab(innerPadding, initialFilePath = mangaPath)
                     }
                 }
             }

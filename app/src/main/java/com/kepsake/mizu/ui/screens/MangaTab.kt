@@ -1,5 +1,6 @@
 package com.kepsake.mizu.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,7 +9,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.kepsake.mizu.ui.components.MangaPanel
+import com.kepsake.mizu.ui.components.PageTrackingLazyColumn
 import com.kepsake.mizu.utils.clearPreviousMangaCache
 import com.kepsake.mizu.utils.extractImageFromZip
 import com.kepsake.mizu.utils.getZipFileEntries
@@ -39,14 +40,16 @@ import java.util.zip.ZipEntry
 
 
 @Composable
-fun MangaViewer(innerPadding: PaddingValues, initialFilePath: String?) {
+fun MangaTab(innerPadding: PaddingValues, initialFilePath: String?) {
     val context = LocalContext.current
+    val listState = rememberLazyListState()
+
     val filePath by remember { mutableStateOf(initialFilePath ?: "") }
+    val extractedImages = remember { mutableStateMapOf<String, File?>() }
+
     var imagesInside by remember { mutableStateOf(emptyList<ZipEntry>()) }
     var isLoading by remember { mutableStateOf(false) }
     var currentMangaId by remember { mutableStateOf("") }
-    val lazyListState = rememberLazyListState()
-    val extractedImages = remember { mutableStateMapOf<String, File?>() }
 
 
     LaunchedEffect(filePath) {
@@ -66,7 +69,7 @@ fun MangaViewer(innerPadding: PaddingValues, initialFilePath: String?) {
         }
     }
 
-    val visibleItemsInfo = lazyListState.layoutInfo.visibleItemsInfo
+    val visibleItemsInfo = listState.layoutInfo.visibleItemsInfo
     val firstVisibleItemIndex = visibleItemsInfo.firstOrNull()?.index ?: 0
     val lastVisibleItemIndex = visibleItemsInfo.lastOrNull()?.index ?: 0
 
@@ -105,9 +108,12 @@ fun MangaViewer(innerPadding: PaddingValues, initialFilePath: String?) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (imagesInside.isNotEmpty()) {
-            LazyColumn(
-                state = lazyListState,
+            PageTrackingLazyColumn(
+                state = listState,
                 modifier = Modifier.fillMaxSize(),
+                onPageChange = {
+                    Log.e("ROHAN", "Page: ${it + 1}")
+                },
                 contentPadding = PaddingValues.Absolute(
                     top = innerPadding.calculateTopPadding() + 8.dp,
                     bottom = innerPadding.calculateBottomPadding() + 0.dp
