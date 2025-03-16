@@ -21,7 +21,7 @@ fun extractImageFromZip(
         }
 
         // Create a unique filename based on the entry name
-        val sanitizedName = entryName.replace('/', '_').replace('\\', '_')
+        val sanitizedName = sanitizeCacheFileName(entryName)
         val tempFile = File(tempDir, sanitizedName)
 
         // Force extraction for each new manga by not reusing existing files
@@ -68,4 +68,8 @@ fun getZipFileEntries(zipFilePath: String): List<ZipEntry> {
 
     // Sort entries by name for correct order
     return emptyList()
+}
+
+fun sanitizeCacheFileName(name: String): String {
+    return name.replace('/', '_').replace('\\', '_')
 }

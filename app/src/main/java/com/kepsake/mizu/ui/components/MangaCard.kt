@@ -32,13 +32,14 @@ import coil.request.ImageRequest
 import com.kepsake.mizu.activities.MangaReaderActivity
 import com.kepsake.mizu.data.models.MangaFile
 import com.kepsake.mizu.utils.extractImageFromZip
+import com.kepsake.mizu.utils.sanitizeCacheFileName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
 
 @Composable
-fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) {
+fun MangaCard(mangaFile: MangaFile) {
     val context = LocalContext.current
     var coverFile by remember { mutableStateOf<File?>(null) }
     var isLoading by remember { mutableStateOf(true) }
@@ -51,20 +52,30 @@ fun MangaCard(mangaFile: MangaFile, extractedCovers: MutableMap<String, File?>) 
 
     LaunchedEffect(mangaFile.id) {
         isLoading = true
-        coverFile = extractedCovers[mangaFile.id] ?: withContext(Dispatchers.IO) {
-            try {
-                val file = extractImageFromZip(
-                    context,
-                    mangaFile.path,
-                    mangaFile.firstImageEntry,
-                    mangaFile.id,
-                    "covers"
-                )
-                extractedCovers[mangaFile.id] = file
-                file
-            } catch (e: Exception) {
-                Log.e("Library", "Error extracting cover for ${mangaFile.fileName}", e)
-                null
+
+        var tempDir = File(context.cacheDir, "covers/${mangaFile.id}")
+        var file = File(tempDir, sanitizeCacheFileName(mangaFile.firstImageEntry))
+
+
+        if (file.exists()) {
+            coverFile = file
+        } else {
+            Log.e("ROHAN", "File doesn't exists")
+            coverFile = withContext(Dispatchers.IO) {
+                try {
+                    val file = extractImageFromZip(
+                        context,
+                        mangaFile.path,
+                        mangaFile.firstImageEntry,
+                        mangaFile.id,
+                        "covers"
+                    )
+//                    extractedCovers[mangaFile.id] = file
+                    file
+                } catch (e: Exception) {
+                    Log.e("Library", "Error extracting cover for ${mangaFile.fileName}", e)
+                    null
+                }
             }
         }
         isLoading = false

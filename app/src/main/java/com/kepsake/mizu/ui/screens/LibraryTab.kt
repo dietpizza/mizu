@@ -42,17 +42,13 @@ fun LibraryTab(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-
     val userDataStore = remember { UserDataStore(context) }
-
     val libraryPath by userDataStore.getString("lib.path").collectAsState(initial = "default")
-
     val mangaFiles by viewModel.allMangaFiles.observeAsState(listOf())
 
     var isLoading by remember { mutableStateOf(false) }
     var currentDirectoryUri by remember { mutableStateOf<Uri?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    val extractedCovers = remember { mutableStateMapOf<String, File?>() }
 
     val directoryPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
@@ -167,7 +163,7 @@ fun LibraryTab(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         items(mangaFiles, key = { it.id }) { comicFile ->
-                            MangaCard(comicFile, extractedCovers)
+                            MangaCard(comicFile)
                         }
                     }
                 }
