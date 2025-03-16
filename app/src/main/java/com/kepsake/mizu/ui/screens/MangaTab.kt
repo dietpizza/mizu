@@ -77,7 +77,7 @@ fun MangaTab(innerPadding: PaddingValues, initialFilePath: String?) {
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 onPageChange = {
-                    Log.e("ROHAN", "Page: ${it + 1}")
+//                    Log.e("ROHAN", "Page: ${it + 1}")
                 },
                 contentPadding = PaddingValues.Absolute(
                     top = innerPadding.calculateTopPadding() + 8.dp,

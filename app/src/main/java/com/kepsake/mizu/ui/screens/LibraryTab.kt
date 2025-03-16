@@ -1,6 +1,7 @@
 package com.kepsake.mizu.ui.screens
 
 import UserDataStore
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -24,6 +25,7 @@ import com.kepsake.mizu.logic.NaturalOrderComparator
 import com.kepsake.mizu.data.models.MangaFile
 import com.kepsake.mizu.data.viewmodels.MangaViewModel
 import com.kepsake.mizu.ui.components.MangaCard
+import com.kepsake.mizu.utils.extractCoverImage
 import com.kepsake.mizu.utils.getFilePathFromUri
 import com.kepsake.mizu.utils.getMangaFiles
 import kotlinx.coroutines.Dispatchers
@@ -70,12 +72,12 @@ fun LibraryTab(
                     UserDataStore(context).saveString("lib.path", path)
                     try {
                         val mangaUris = scanForManga(path)
-                        val _mangaFiles = mangaUris.mapNotNull { processManga(it) }
+                        val _mangaFiles = mangaUris.mapNotNull { processManga(context, it) }
                         viewModel.insertAll(_mangaFiles)
 
                     } catch (e: Exception) {
                         errorMessage = "Error loading files: ${e.message}"
-                        Log.e("Library", "Error processing directory", e)
+//                        Log.e("Library", "Error processing directory", e)
                     }
                 }
                 isLoading = false
@@ -83,9 +85,9 @@ fun LibraryTab(
         }
     }
     LaunchedEffect(libraryPath) {
-        Log.e("ROHAN", "Path: ${libraryPath.length}")
+//        Log.e("ROHAN", "Path: ${libraryPath.length}")
         if (libraryPath == "default") {
-            Log.e("ROHAN", "Path: ${libraryPath}")
+//            Log.e("ROHAN", "Path: ${libraryPath}")
         }
     }
 
@@ -173,7 +175,7 @@ fun LibraryTab(
     }
 }
 
-suspend fun processManga(path: String): MangaFile? =
+suspend fun processManga(context: Context, path: String): MangaFile? =
     withContext(Dispatchers.IO) {
         try {
             val fileName = File(path).name
@@ -181,11 +183,18 @@ suspend fun processManga(path: String): MangaFile? =
 
             // Generate unique ID for each comic file for caching
             val id = UUID.randomUUID().toString()
+            val coverPath = extractCoverImage(context, id, path)
+            Log.e("ROHAN", "Cover0 ${coverPath}")
 
-            firstImageEntry?.let {
-                return@withContext MangaFile(path, fileName, it, id)
+            if (coverPath != null) {
+                return@withContext MangaFile(path, fileName, coverPath, id)
             }
             null
+
+//            firstImageEntry?.let {
+//                return@withContext MangaFile(path, fileName, it, id)
+//            }
+//            null
         } catch (e: Exception) {
             // Log error but continue processing other files
             Log.e("Library", "Error processing file ${path}", e)
