@@ -15,9 +15,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
+import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.kepsake.mizu.utils.extractImageFromZip
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.zip.ZipEntry
@@ -54,6 +56,8 @@ fun MangaPanel(
                 .crossfade(true)
                 .diskCacheKey("${mangaId}_${zipEntry.name}")  // Use mangaId in cache key
                 .memoryCacheKey("${mangaId}_${zipEntry.name}") // Use mangaId in cache key
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .diskCachePolicy(CachePolicy.ENABLED)
                 .build()
         },
         contentDescription = null,

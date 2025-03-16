@@ -72,7 +72,25 @@ fun MangaTab(innerPadding: PaddingValues, initialFilePath: String?) {
 
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (imagesInside.isNotEmpty()) {
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(30.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+        if (imagesInside.isNotEmpty() && !isLoading) {
             PageTrackingLazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
@@ -86,29 +104,6 @@ fun MangaTab(innerPadding: PaddingValues, initialFilePath: String?) {
             ) {
                 items(items = imagesInside, key = { it.name }) { zipEntry ->
                     MangaPanel(filePath, zipEntry, extractedImages, currentMangaId)
-                }
-            }
-        }
-        if (isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(50.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        "Loading...",
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
                 }
             }
         }
