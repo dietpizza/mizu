@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import com.kepsake.mizu.ui.components.MangaPanel
 import com.kepsake.mizu.ui.components.PageTrackingLazyColumn
 import com.kepsake.mizu.utils.clearPreviousMangaCache
-import com.kepsake.mizu.utils.extractImageFromZip
 import com.kepsake.mizu.utils.getZipFileEntries
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -57,8 +56,10 @@ fun MangaTab(innerPadding: PaddingValues, initialFilePath: String?) {
             isLoading = true
             CoroutineScope(Dispatchers.IO).launch {
                 val newMangaId = UUID.randomUUID().toString()
+
                 extractedImages.clear()
                 clearPreviousMangaCache(context, currentMangaId)
+
                 val entries = getZipFileEntries(filePath)
                 withContext(Dispatchers.Main) {
                     currentMangaId = newMangaId
@@ -69,42 +70,6 @@ fun MangaTab(innerPadding: PaddingValues, initialFilePath: String?) {
         }
     }
 
-    val visibleItemsInfo = listState.layoutInfo.visibleItemsInfo
-    val firstVisibleItemIndex = visibleItemsInfo.firstOrNull()?.index ?: 0
-    val lastVisibleItemIndex = visibleItemsInfo.lastOrNull()?.index ?: 0
-
-    LaunchedEffect(firstVisibleItemIndex, lastVisibleItemIndex, currentMangaId) {
-        if (imagesInside.isNotEmpty() && filePath.isNotEmpty()) {
-            val prefetchStart = maxOf(0, firstVisibleItemIndex - 2)
-            val prefetchEnd = minOf(imagesInside.size - 1, lastVisibleItemIndex + 2)
-            for (i in prefetchStart..prefetchEnd) {
-                if (i in imagesInside.indices) {
-                    val entry = imagesInside[i]
-                    if (!extractedImages.containsKey(entry.name)) {
-                        launch(Dispatchers.IO) {
-                            extractImageFromZip(
-                                context,
-                                filePath,
-                                entry.name,
-                                currentMangaId,
-                                cachePath = "images"
-                            ).let {
-                                extractedImages[entry.name] = it
-                            }
-                        }
-                    }
-                }
-            }
-            val keysToRemove = extractedImages.keys.filter { entryName ->
-                val index = imagesInside.indexOfFirst { it.name == entryName }
-                index < prefetchStart - 3 || index > prefetchEnd + 3
-            }
-            keysToRemove.forEach { key ->
-                extractedImages[key]?.delete()
-                extractedImages.remove(key)
-            }
-        }
-    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (imagesInside.isNotEmpty()) {
