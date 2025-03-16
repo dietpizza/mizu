@@ -36,7 +36,7 @@ import java.util.zip.ZipFile
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryView(
+fun LibraryTab(
     innerPadding: PaddingValues = PaddingValues(),
     viewModel: MangaViewModel = viewModel()
 ) {
@@ -124,7 +124,7 @@ fun LibraryView(
 
                 mangaFiles.isEmpty() -> {
                     val buttonText =
-                        if (libraryPath.length > 0) "Change Folder" else "Select Folder"
+                        if (libraryPath.isNotEmpty()) "Change Folder" else "Select Folder"
                     Column(
                         modifier = Modifier
                             .align(Alignment.Center)
