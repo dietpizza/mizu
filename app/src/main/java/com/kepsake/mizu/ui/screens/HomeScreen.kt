@@ -51,7 +51,7 @@ fun HomeScreen(innerPadding: PaddingValues) {
         }
         NavigationBar(
             windowInsets = WindowInsets(top = 0, bottom = 0),
-            modifier = Modifier.height(72.dp)
+            modifier = Modifier.height(60.dp)
 
         ) {
             NavigationBarItem(
