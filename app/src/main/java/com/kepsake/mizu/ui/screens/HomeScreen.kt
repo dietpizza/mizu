@@ -2,7 +2,10 @@ package com.kepsake.mizu.ui.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -11,10 +14,10 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
 @Composable
@@ -23,14 +26,18 @@ fun HomeScreen(innerPadding: PaddingValues) {
     val coroutineScope = rememberCoroutineScope()
 
 
-    fun goTo(page: Int) {
+    fun goToPage(page: Int) {
         coroutineScope.launch {
             pagerState.scrollToPage(page)
         }
     }
 
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = innerPadding.calculateBottomPadding())
+    ) {
         HorizontalPager(
             userScrollEnabled = false,
             state = pagerState,
@@ -42,18 +49,20 @@ fun HomeScreen(innerPadding: PaddingValues) {
                 1 -> RecentsTab(innerPadding)
             }
         }
-        NavigationBar {
+        NavigationBar(
+            windowInsets = WindowInsets(top = 0, bottom = 0),
+            modifier = Modifier.height(72.dp)
+
+        ) {
             NavigationBarItem(
-                icon = { Icon(Icons.Rounded.Settings, contentDescription = "Library") },
-                label = { Text("Library") },
                 selected = pagerState.currentPage == 0,
-                onClick = { goTo(0) }
+                icon = { Icon(Icons.Rounded.Settings, contentDescription = "Library") },
+                onClick = { goToPage(0) },
             )
             NavigationBarItem(
-                icon = { Icon(Icons.Rounded.FavoriteBorder, contentDescription = "Recents") },
-                label = { Text("Recents") },
                 selected = pagerState.currentPage == 1,
-                onClick = { goTo(1) }
+                icon = { Icon(Icons.Rounded.FavoriteBorder, contentDescription = "Recents") },
+                onClick = { goToPage(1) },
             )
         }
     }
