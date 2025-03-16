@@ -8,16 +8,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.kepsake.mizu.ui.components.BottomNavigationIcon
+import com.mikepenz.iconics.typeface.library.phosphor.Phosphor
 import kotlinx.coroutines.launch
 
 @Composable
@@ -56,12 +54,24 @@ fun HomeScreen(innerPadding: PaddingValues) {
         ) {
             NavigationBarItem(
                 selected = pagerState.currentPage == 0,
-                icon = { Icon(Icons.Default.Home, contentDescription = "Library") },
+                icon = {
+                    BottomNavigationIcon(
+                        selected = pagerState.currentPage == 0,
+                        icon = Phosphor.Icon.pho_book_open,
+                        selectedIcon = Phosphor.Icon.pho_book_open_fill,
+                    )
+                },
                 onClick = { goToPage(0) },
             )
             NavigationBarItem(
                 selected = pagerState.currentPage == 1,
-                icon = { Icon(Icons.Rounded.FavoriteBorder, contentDescription = "Recents") },
+                icon = {
+                    BottomNavigationIcon(
+                        selected = pagerState.currentPage == 1,
+                        icon = Phosphor.Icon.pho_archive,
+                        selectedIcon = Phosphor.Icon.pho_archive_fill,
+                    )
+                },
                 onClick = { goToPage(1) },
             )
         }

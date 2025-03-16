@@ -21,7 +21,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -60,6 +60,10 @@ dependencies {
     implementation libs.androidx.datastore.preferences
     implementation libs.material3
 
+    // Iconics dependencies
+    implementation libs.iconics.core
+    implementation libs.iconics.compose
+    implementation libs.phosphor.typeface
 
     // Room dependencies
     implementation libs.androidx.room.runtime
