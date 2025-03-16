@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
+import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.kepsake.mizu.activities.MangaReaderActivity
 import com.kepsake.mizu.data.models.MangaFile
@@ -49,6 +50,7 @@ fun MangaCard(manga: MangaFile) {
                     .data(File(manga.firstImageEntry))
                     .crossfade(true)
                     .memoryCacheKey("${manga.id}_cover")
+                    .memoryCachePolicy(CachePolicy.ENABLED)
                     .build(),
                 contentDescription = manga.fileName,
                 contentScale = ContentScale.Crop,
