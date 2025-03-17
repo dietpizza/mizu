@@ -94,7 +94,7 @@ fun sanitizeFileName(name: String): String {
 
 
 fun extractCoverImage(context: Context, mangaId: String, mangaPath: String): String? {
-    val coversDir = File(context.cacheDir, "covers/$mangaId").apply {
+    val coversDir = File(context.filesDir, "covers/$mangaId").apply {
         if (!exists()) mkdirs()
     }
     val entry = getZipFileEntries(mangaPath).firstOrNull()
