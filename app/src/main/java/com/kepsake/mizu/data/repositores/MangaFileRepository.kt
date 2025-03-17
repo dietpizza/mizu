@@ -24,11 +24,15 @@ class MangaFileRepository(private val mangaFileDao: MangaFileDao) {
     }
 
     suspend fun delete(mangaFile: MangaFile) {
-        mangaFileDao.deleteMangaFile(mangaFile)
+        mangaFileDao.delete(mangaFile)
     }
 
     suspend fun deleteAll() {
-        mangaFileDao.deleteAllMangaFiles()
+        mangaFileDao.deleteAll()
+    }
+
+    suspend fun update(mangaFile: MangaFile) {
+        mangaFileDao.update(mangaFile)
     }
 
     fun getMangaFileById(id: String): LiveData<MangaFile> {

@@ -1,13 +1,17 @@
 package com.kepsake.mizu.ui.components
 
 import android.content.Intent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,6 +30,25 @@ import com.kepsake.mizu.activities.MangaReaderActivity
 import com.kepsake.mizu.data.models.MangaFile
 import java.io.File
 
+@Composable
+fun SimpleProgressBar(
+    progress: Float,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(2.dp)
+            .background(Color.White.copy(alpha = 0.2f))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress)
+                .height(2.dp)
+                .background(Color.White)
+        )
+    }
+}
 
 @Composable
 fun MangaCard(manga: MangaFile) {
@@ -77,20 +100,30 @@ fun MangaCard(manga: MangaFile) {
                 }
             )
 
-            Surface(
-                color = Color.Black.copy(alpha = 0.6f),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-            ) {
-                Text(
-                    text = manga.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White,
-                    modifier = Modifier.padding(8.dp),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+
+                Surface(
+                    color = Color.Black.copy(alpha = 0.6f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                ) {
+                    Text(
+                        text = manga.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White,
+                        modifier = Modifier.padding(8.dp),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                if (manga.last_page > 0 && manga.total_pages > 0) {
+                    SimpleProgressBar(
+                        progress =
+                        (manga.last_page.toFloat() + 1f) / manga.total_pages.toFloat()
+                    )
+                }
             }
         }
     }

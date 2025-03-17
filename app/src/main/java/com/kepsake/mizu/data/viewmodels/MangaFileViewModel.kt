@@ -32,6 +32,10 @@ class MangaFileViewModel(application: Application) : AndroidViewModel(applicatio
         repository.delete(mangaFile)
     }
 
+    fun update(mangaFile: MangaFile) = viewModelScope.launch(Dispatchers.IO) {
+        repository.update(mangaFile)
+    }
+
     fun deleteAll() = viewModelScope.launch(Dispatchers.IO) {
         repository.deleteAll()
     }

@@ -53,8 +53,6 @@ fun LibraryTab(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     suspend fun syncLibrary(path: String?) {
-        Log.e(TAG, "Sync Begin ${path}")
-        // Use withContext instead of launch to make it wait
         withContext(Dispatchers.IO) {
             if (path != null || libraryPath.isNotEmpty()) {
                 val target = path ?: libraryPath
@@ -69,7 +67,6 @@ fun LibraryTab(
                 }
             }
         }
-        Log.e(TAG, "Sync End")
     }
 
     val directoryPickerLauncher = rememberLauncherForActivityResult(

@@ -20,20 +20,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kepsake.mizu.data.models.MangaFile
 import com.kepsake.mizu.data.models.MangaPage
+import com.kepsake.mizu.data.models.toMangaFile
+import com.kepsake.mizu.data.models.toMap
+import com.kepsake.mizu.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu.data.viewmodels.MangaPageViewModel
 import com.kepsake.mizu.logic.NaturalOrderComparator
 import com.kepsake.mizu.ui.components.MangaPanel
 import com.kepsake.mizu.ui.components.PageTrackingLazyColumn
-import com.kepsake.mizu.utils.clearPreviousMangaCache
 import com.kepsake.mizu.utils.getMangaPagesAspectRatios
 import com.kepsake.mizu.utils.getZipFileEntries
 import kotlinx.coroutines.CoroutineScope
@@ -50,12 +52,15 @@ import java.util.zip.ZipEntry
 fun MangaViewerTab(
     innerPadding: PaddingValues,
     manga: MangaFile,
-    viewModel: MangaPageViewModel = viewModel()
+    mangaPageViewModel: MangaPageViewModel = viewModel(),
+    mangaViewModel: MangaFileViewModel = viewModel()
+
 ) {
     val context = LocalContext.current
     val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
-    val mangaPages by viewModel.getMangaPages(manga.id)
+    val mangaPages by mangaPageViewModel.getMangaPages(manga.id)
         .map { pages -> pages.sortedWith(compareBy(NaturalOrderComparator()) { it.page_name }) }
         .collectAsState(initial = emptyList())
 
@@ -64,11 +69,18 @@ fun MangaViewerTab(
     var isLoading by remember { mutableStateOf(false) }
 
 
-    LaunchedEffect(manga) {
+    LaunchedEffect(mangaPages) {
+        if (mangaPages.size > 0) {
+            scope.launch {
+                listState.scrollToItem(manga.last_page)
+            }
+        }
+    }
+
+    LaunchedEffect(manga.id) {
         isLoading = true
         CoroutineScope(Dispatchers.IO).launch {
             extractedImages.clear()
-//            clearPreviousMangaCache(context, manga.id)
 
             val entries = getZipFileEntries(manga.path)
                 .sortedWith(compareBy(NaturalOrderComparator()) { it.name })
@@ -83,7 +95,7 @@ fun MangaViewerTab(
                     }
                     null
                 }
-                viewModel.addMangaPages(allPages)
+                mangaPageViewModel.addMangaPages(allPages)
             }
 
             withContext(Dispatchers.Main) {
@@ -121,8 +133,15 @@ fun MangaViewerTab(
             PageTrackingLazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                onPageChange = {
-//                    Log.e("ROHAN", "Page: ${it + 1}")
+                onPageChange = { page ->
+                    scope.launch {
+                        val _current = manga.toMap()
+                        val _newData = _current + mapOf("last_page" to page)
+                        val _manga = _newData.toMangaFile()
+
+                        mangaViewModel.update(_manga)
+                        Log.e("ROHAN", "Page: ${page + 1}")
+                    }
                 },
                 contentPadding = PaddingValues.Absolute(
                     top = innerPadding.calculateTopPadding() + 8.dp,

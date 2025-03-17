@@ -15,10 +15,13 @@ interface MangaFileDao {
     suspend fun insert(mangaFile: MangaFile)
 
     @Delete
-    suspend fun deleteMangaFile(mangaFile: MangaFile)
+    suspend fun delete(mangaFile: MangaFile)
+
+    @Update
+    suspend fun update(mangaFile: MangaFile)
 
     @Query("DELETE FROM manga_files")
-    suspend fun deleteAllMangaFiles()
+    suspend fun deleteAll()
 
     @Query("SELECT * FROM manga_files WHERE path = :path LIMIT 1")
     suspend fun getMangaFileByPathSync(path: String): MangaFile?
