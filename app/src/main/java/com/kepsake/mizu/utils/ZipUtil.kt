@@ -152,7 +152,6 @@ fun getMangaPagesAspectRatios(context: Context, zipFilePath: String): MutableMap
                     }
                 }
                 val aspectRatio = getImageAspectRatio(tmpFile.path)
-                Log.e(TAG, "AspectRatio: $aspectRatio")
                 pageAspectRatioMap[entry.name] = aspectRatio
             }
         }
