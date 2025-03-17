@@ -113,6 +113,9 @@ fun extractImageFromZip(
 }
 
 fun extractZipToFolder(zipFilePath: String, destinationPath: String): Boolean {
+    File(destinationPath).apply {
+        mkdirs()
+    }
     try {
         ZipFile(File(zipFilePath)).use { zipFile ->
             val entries = zipFile.entries().toList()
@@ -124,6 +127,8 @@ fun extractZipToFolder(zipFilePath: String, destinationPath: String): Boolean {
                             input.copyTo(output)
                         }
                     }
+                    val aspectRatio = getImageAspectRatio(outFile.path)
+                    Log.e(TAG, "Aspect Ratio: $aspectRatio")
                 }
             }
             return true
@@ -131,4 +136,31 @@ fun extractZipToFolder(zipFilePath: String, destinationPath: String): Boolean {
     } catch (e: Exception) {
         return false
     }
+}
+
+fun getMangaPagesAspectRatios(context: Context, zipFilePath: String): MutableMap<String, Float>? {
+    val tmpFile = File(context.cacheDir, "temp_aspect")
+    val pageAspectRatioMap = emptyMap<String, Float>().toMutableMap()
+
+    try {
+        ZipFile(File(zipFilePath)).use { zipFile ->
+            val entries = zipFile.entries().toList()
+            entries.forEach { entry ->
+                zipFile.getInputStream(entry).use { input ->
+                    tmpFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                val aspectRatio = getImageAspectRatio(tmpFile.path)
+                Log.e(TAG, "AspectRatio: $aspectRatio")
+                pageAspectRatioMap[entry.name] = aspectRatio
+            }
+        }
+        return pageAspectRatioMap
+    } catch (_: Exception) {
+        // TODO
+    } finally {
+        tmpFile.delete()
+    }
+    return null
 }

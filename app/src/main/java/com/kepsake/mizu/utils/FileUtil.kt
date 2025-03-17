@@ -1,6 +1,7 @@
 package com.kepsake.mizu.utils
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
 import android.provider.DocumentsContract
@@ -99,3 +100,18 @@ fun getFilePathFromUri(context: Context, uri: Uri): String? {
     return null
 }
 
+fun getImageAspectRatio(filePath: String): Float {
+    val options = BitmapFactory.Options().apply {
+        inJustDecodeBounds = true  // This avoids loading the full bitmap into memory
+    }
+    BitmapFactory.decodeFile(filePath, options)
+   
+    val width = options.outWidth
+    val height = options.outHeight
+
+    return if (height > 0) {
+        width.toFloat() / height.toFloat()
+    } else {
+        0f  // Handle error case
+    }
+}
