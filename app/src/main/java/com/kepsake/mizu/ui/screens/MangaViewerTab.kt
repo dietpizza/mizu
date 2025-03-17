@@ -38,6 +38,7 @@ import com.kepsake.mizu.utils.getMangaPagesAspectRatios
 import com.kepsake.mizu.utils.getZipFileEntries
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -55,7 +56,9 @@ fun MangaViewerTab(
     val listState = rememberLazyListState()
 
     val mangaPages by viewModel.getMangaPages(manga.id)
+        .map { pages -> pages.sortedWith(compareBy(NaturalOrderComparator()) { it.page_name }) }
         .collectAsState(initial = emptyList())
+
     val extractedImages = remember { mutableStateMapOf<String, File?>() }
     var imagesInside by remember { mutableStateOf(emptyList<ZipEntry>()) }
     var isLoading by remember { mutableStateOf(false) }
@@ -65,11 +68,10 @@ fun MangaViewerTab(
         isLoading = true
         CoroutineScope(Dispatchers.IO).launch {
             extractedImages.clear()
-            clearPreviousMangaCache(context, manga.id)
+//            clearPreviousMangaCache(context, manga.id)
 
-            val entries =
-                getZipFileEntries(manga.path).sortedWith(compareBy(NaturalOrderComparator()) { it.name })
-
+            val entries = getZipFileEntries(manga.path)
+                .sortedWith(compareBy(NaturalOrderComparator()) { it.name })
             val pageAspectRatioMap = getMangaPagesAspectRatios(context, manga.path)
 
             if (pageAspectRatioMap != null) {
@@ -101,7 +103,7 @@ fun MangaViewerTab(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f)),
+                    .background(MaterialTheme.colorScheme.surfaceContainer),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -115,7 +117,7 @@ fun MangaViewerTab(
                 }
             }
         }
-        if (imagesInside.isNotEmpty() && !isLoading) {
+        if (mangaPages.isNotEmpty() && !isLoading) {
             PageTrackingLazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
@@ -127,8 +129,8 @@ fun MangaViewerTab(
                     bottom = innerPadding.calculateBottomPadding() + 0.dp
                 ),
             ) {
-                items(items = imagesInside, key = { it.name }) { zipEntry ->
-                    MangaPanel(manga.path, zipEntry, extractedImages, manga.id)
+                items(items = mangaPages, key = { it.page_name }) { mangaPage ->
+                    MangaPanel(manga.path, mangaPage, extractedImages, manga.id)
                 }
             }
         }

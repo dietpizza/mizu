@@ -11,39 +11,45 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import com.kepsake.mizu.data.models.MangaPage
 import com.kepsake.mizu.utils.extractImageFromZip
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.util.zip.ZipEntry
 
 @Composable
 fun MangaPanel(
     zipFilePath: String,
-    zipEntry: ZipEntry,
+    mangaPage: MangaPage,
     extractedImages: MutableMap<String, File?>,
     mangaId: String
 ) {
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
+
+    val cardHeight by remember { mutableStateOf(screenWidthDp / mangaPage.aspect_ratio) }
     var imageFile by remember { mutableStateOf<File?>(null) }
 
-    // Get the file from the cache map or extract it if needed
-    LaunchedEffect(zipEntry, mangaId) {
-        imageFile = extractedImages[zipEntry.name] ?: withContext(Dispatchers.IO) {
+    LaunchedEffect(mangaPage, mangaId) {
+        imageFile = extractedImages[mangaPage.page_name] ?: withContext(Dispatchers.IO) {
             val file = extractImageFromZip(
                 context,
                 zipFilePath,
-                zipEntry.name,
+                mangaPage.page_name,
                 mangaId,
                 "images"
             )
-            extractedImages[zipEntry.name] = file
+            extractedImages[mangaPage.page_name] = file
             file
         }
     }
@@ -53,8 +59,8 @@ fun MangaPanel(
             ImageRequest.Builder(context)
                 .data(it)
                 .crossfade(true)
-                .diskCacheKey("${mangaId}_${zipEntry.name}")  // Use mangaId in cache key
-                .memoryCacheKey("${mangaId}_${zipEntry.name}") // Use mangaId in cache key
+                .diskCacheKey("${mangaId}_${mangaPage.page_name}")  // Use mangaId in cache key
+                .memoryCacheKey("${mangaId}_${mangaPage.page_name}") // Use mangaId in cache key
                 .memoryCachePolicy(CachePolicy.ENABLED)
                 .diskCachePolicy(CachePolicy.ENABLED)
                 .build()
@@ -66,15 +72,17 @@ fun MangaPanel(
         contentScale = ContentScale.FillWidth,
         loading = {
             Card(
+                shape = RectangleShape,
                 modifier = Modifier
-                    .height(600.dp)
+                    .height(cardHeight.dp)
                     .fillMaxWidth(),
             ) {}
         },
         error = {
             Card(
+                shape = RectangleShape,
                 modifier = Modifier
-                    .height(600.dp)
+                    .height(cardHeight.dp)
                     .fillMaxWidth(),
             ) {}
         }
