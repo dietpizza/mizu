@@ -29,12 +29,14 @@ import com.kepsake.mizu.utils.extractCoverImage
 import com.kepsake.mizu.utils.getFilePathFromUri
 import com.kepsake.mizu.utils.getMangaFiles
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.*
 import java.util.zip.ZipFile
 
+val TAG = "LibraryTab"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,12 +47,32 @@ fun LibraryTab(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val userDataStore = remember { UserDataStore(context) }
-    val libraryPath by userDataStore.getString("lib.path").collectAsState(initial = "default")
+    val libraryPath by userDataStore.getString("lib.path").collectAsState(initial = "")
     val mangaFiles by viewModel.allMangaFiles.observeAsState(listOf())
 
     var isLoading by remember { mutableStateOf(false) }
     var currentDirectoryUri by remember { mutableStateOf<Uri?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    suspend fun syncLibrary(path: String?) {
+        Log.e(TAG, "Sync Begin ${path}")
+        // Use withContext instead of launch to make it wait
+        withContext(Dispatchers.IO) {
+            if (path != null || libraryPath.isNotEmpty()) {
+                val target = path ?: libraryPath
+
+                try {
+                    val mangaUris = scanForManga(target)
+                    val _mangaFiles = mangaUris.mapNotNull { processManga(context, it) }
+                    viewModel.insertAll(_mangaFiles)
+
+                } catch (e: Exception) {
+                    errorMessage = "Error loading files: ${e.message}"
+                }
+            }
+        }
+        Log.e(TAG, "Sync End")
+    }
 
     val directoryPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
@@ -64,30 +86,15 @@ fun LibraryTab(
 
             isLoading = true
             errorMessage = null
-
             coroutineScope.launch {
                 val path = getFilePathFromUri(context, uri)
 
                 if (path != null) {
                     UserDataStore(context).saveString("lib.path", path)
-                    try {
-                        val mangaUris = scanForManga(path)
-                        val _mangaFiles = mangaUris.mapNotNull { processManga(context, it) }
-                        viewModel.insertAll(_mangaFiles)
-
-                    } catch (e: Exception) {
-                        errorMessage = "Error loading files: ${e.message}"
-//                        Log.e("Library", "Error processing directory", e)
-                    }
+                    syncLibrary(path)
                 }
                 isLoading = false
             }
-        }
-    }
-    LaunchedEffect(libraryPath) {
-//        Log.e("ROHAN", "Path: ${libraryPath.length}")
-        if (libraryPath == "default") {
-//            Log.e("ROHAN", "Path: ${libraryPath}")
         }
     }
 
@@ -119,8 +126,7 @@ fun LibraryTab(
                     }
                 }
 
-
-                mangaFiles.isEmpty() -> {
+                (mangaFiles.isEmpty() && !isLoading) -> {
                     val buttonText =
                         if (libraryPath.isNotEmpty()) "Change Folder" else "Select Folder"
                     Column(
@@ -143,7 +149,7 @@ fun LibraryTab(
                                 onClick = { directoryPickerLauncher.launch(null) }) {
                                 Text(buttonText)
                             }
-                            if (libraryPath.length > 0) {
+                            if (!libraryPath.isEmpty()) {
                                 Spacer(modifier = Modifier.height(8.dp))
                                 TextButton(
                                     modifier = Modifier.fillMaxWidth(),
@@ -179,22 +185,16 @@ suspend fun processManga(context: Context, path: String): MangaFile? =
     withContext(Dispatchers.IO) {
         try {
             val fileName = File(path).name
-            val firstImageEntry = findFirstImageEntryName(path)
 
             // Generate unique ID for each comic file for caching
             val id = UUID.randomUUID().toString()
             val coverPath = extractCoverImage(context, id, path)
-            Log.e("ROHAN", "Cover0 ${coverPath}")
 
             if (coverPath != null) {
                 return@withContext MangaFile(path, fileName, coverPath, id)
             }
             null
 
-//            firstImageEntry?.let {
-//                return@withContext MangaFile(path, fileName, it, id)
-//            }
-//            null
         } catch (e: Exception) {
             // Log error but continue processing other files
             Log.e("Library", "Error processing file ${path}", e)
@@ -205,20 +205,4 @@ suspend fun processManga(context: Context, path: String): MangaFile? =
 suspend fun scanForManga(path: String): List<String> =
     withContext(Dispatchers.IO) {
         getMangaFiles(path).map { it["path"] as String }.toList()
-    }
-
-
-suspend fun findFirstImageEntryName(path: String): String? =
-    withContext(Dispatchers.IO) {
-        try {
-            val zipFile = ZipFile(File(path))
-            val entries = zipFile.entries();
-            val fileList = entries.toList().map { it.name }.sortedWith(NaturalOrderComparator())
-
-            return@withContext fileList.firstOrNull()
-
-        } catch (e: Exception) {
-            Log.e("Library", "Error finding first image in zip", e)
-        }
-        null
     }

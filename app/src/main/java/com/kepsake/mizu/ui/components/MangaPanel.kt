@@ -19,7 +19,6 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.kepsake.mizu.utils.extractImageFromZip
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.zip.ZipEntry

@@ -17,45 +17,27 @@ fun extractImageFromZip(
     cachePath: String
 ): File? {
     return try {
-        // Create a directory for this specific manga using the manga ID
         val tempDir = File(context.cacheDir, "${cachePath}/$mangaId").apply {
             if (!exists()) mkdirs()
         }
 
-        // Create a unique filename based on the entry name
         val sanitizedName = sanitizeFileName(entryName)
         val tempFile = File(tempDir, sanitizedName)
 
-        // Force extraction for each new manga by not reusing existing files
-        ZipFile(zipFilePath).use { zipFile ->
-            val entry = zipFile.getEntry(entryName)
-            if (entry != null && !entry.isDirectory) {
-                zipFile.getInputStream(entry).use { input ->
-                    tempFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
-                }
-
-                // Verify the file was created successfully
-                if (tempFile.exists() && tempFile.length() > 0) {
-                    tempFile
-                } else {
-                    Log.e("MangaView", "Failed to extract: $entryName (Empty file)")
-                    null
-                }
-            } else {
-                Log.e("MangaView", "Entry not found or is directory: $entryName")
-                null
-            }
+        if (tempFile.exists()) {
+            Log.d(TAG, "Cache hit!")
+            tempFile
+        } else {
+            Log.d(TAG, "Extracted!")
+            extractEntryToFile(zipFilePath, tempFile.path, entryName)
         }
     } catch (e: Exception) {
-        Log.e("MangaView", "Error extracting image: $entryName", e)
+        Log.e(TAG, "Error extracting image: $entryName", e)
         null
     }
 }
 
-fun extractFileFromZip(
-    context: Context,
+fun extractEntryToFile(
     zipFilePath: String,
     outFilePath: String,
     entryName: String
@@ -121,7 +103,7 @@ fun extractCoverImage(context: Context, mangaId: String, mangaPath: String): Str
         val outFile = File(coversDir, sanitizeFileName(entry.name))
 
         if (!outFile.exists()) {
-            val extractedFile = extractFileFromZip(context, mangaPath, outFile.path, entry.name)
+            val extractedFile = extractEntryToFile(mangaPath, outFile.path, entry.name)
             return extractedFile?.path
         } else {
             return outFile.path

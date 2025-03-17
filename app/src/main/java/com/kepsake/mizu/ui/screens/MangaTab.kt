@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.kepsake.mizu.data.models.MangaFile
 import com.kepsake.mizu.ui.components.MangaPanel
 import com.kepsake.mizu.ui.components.PageTrackingLazyColumn
 import com.kepsake.mizu.utils.clearPreviousMangaCache
@@ -39,33 +40,25 @@ import java.util.zip.ZipEntry
 
 
 @Composable
-fun MangaTab(innerPadding: PaddingValues, initialFilePath: String?) {
+fun MangaTab(innerPadding: PaddingValues, manga: MangaFile) {
     val context = LocalContext.current
     val listState = rememberLazyListState()
 
-    val filePath by remember { mutableStateOf(initialFilePath ?: "") }
     val extractedImages = remember { mutableStateMapOf<String, File?>() }
-
     var imagesInside by remember { mutableStateOf(emptyList<ZipEntry>()) }
     var isLoading by remember { mutableStateOf(false) }
-    var currentMangaId by remember { mutableStateOf("") }
 
 
-    LaunchedEffect(filePath) {
-        if (filePath.isNotEmpty()) {
-            isLoading = true
-            CoroutineScope(Dispatchers.IO).launch {
-                val newMangaId = UUID.randomUUID().toString()
+    LaunchedEffect(manga) {
+        isLoading = true
+        CoroutineScope(Dispatchers.IO).launch {
+            extractedImages.clear()
+            clearPreviousMangaCache(context, manga.id)
 
-                extractedImages.clear()
-                clearPreviousMangaCache(context, currentMangaId)
-
-                val entries = getZipFileEntries(filePath)
-                withContext(Dispatchers.Main) {
-                    currentMangaId = newMangaId
-                    imagesInside = entries
-                    isLoading = false
-                }
+            val entries = getZipFileEntries(manga.path)
+            withContext(Dispatchers.Main) {
+                imagesInside = entries
+                isLoading = false
             }
         }
     }
@@ -103,7 +96,7 @@ fun MangaTab(innerPadding: PaddingValues, initialFilePath: String?) {
                 ),
             ) {
                 items(items = imagesInside, key = { it.name }) { zipEntry ->
-                    MangaPanel(filePath, zipEntry, extractedImages, currentMangaId)
+                    MangaPanel(manga.path, zipEntry, extractedImages, manga.id)
                 }
             }
         }
