@@ -19,15 +19,6 @@ class MangaReaderActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         val manga = intent.getParcelableExtra<MangaFile>("manga")
-//        val path = intent.getStringExtra("manga.path") as String
-//        val name = intent.getStringExtra("manga.name") as String
-//        val coverPath = intent.getStringExtra("manga.cover_path") as String
-//        val id = intent.getStringExtra("manga.id") as String
-//        val lastPage = intent.getIntExtra("manga.last_page", 0)
-//        val totalPages = intent.getIntExtra("manga.total_pages", 0)
-//        val manga =
-//            MangaFile(id, path, name, coverPath, lastPage, totalPages)
-
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -40,10 +31,5 @@ class MangaReaderActivity : ComponentActivity() {
                 }
             }
         }
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                finish() // Ensures the activity is destroyed when navigating back
-            }
-        })
     }
 }

@@ -33,14 +33,7 @@ fun MangaCard(manga: MangaFile) {
 
     fun onClick() {
         val intent = Intent(context, MangaReaderActivity::class.java)
-
         intent.putExtra("manga", manga)
-//        intent.putExtra("manga.id", manga.id)
-//        intent.putExtra("manga.path", manga.path)
-//        intent.putExtra("manga.name", manga.name)
-//        intent.putExtra("manga.cover_path", manga.cover_path)
-//        intent.putExtra("manga.last_page", manga.last_page)
-//        intent.putExtra("manga.total_pages", manga.total_pages)
 
         context.startActivity(intent)
     }
