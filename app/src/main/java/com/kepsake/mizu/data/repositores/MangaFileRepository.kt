@@ -5,7 +5,7 @@ import com.kepsake.mizu.data.models.MangaFileDao
 
 import androidx.lifecycle.LiveData
 
-class MangaRepository(private val mangaFileDao: MangaFileDao) {
+class MangaFileRepository(private val mangaFileDao: MangaFileDao) {
     val allMangaFiles: LiveData<List<MangaFile>> = mangaFileDao.getAllMangaFiles()
 
     suspend fun insert(mangaFile: MangaFile) {

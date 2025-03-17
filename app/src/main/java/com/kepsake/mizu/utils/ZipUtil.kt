@@ -42,6 +42,11 @@ fun extractEntryToFile(
     }
 }
 
+fun getZipPageCount(zipFilePath: String): Int {
+    val zipFile = ZipFile(File(zipFilePath))
+    return zipFile.entries().toList().filter { isImageFile(it.name) }.size
+}
+
 // This function remains unchanged
 fun getZipFileEntries(zipFilePath: String): List<ZipEntry> {
     try {

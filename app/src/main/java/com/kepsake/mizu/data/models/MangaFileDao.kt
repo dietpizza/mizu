@@ -14,9 +14,6 @@ interface MangaFileDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(mangaFile: MangaFile)
 
-//    @Insert(onConflict = OnConflictStrategy.IGNORE)  // Changed from REPLACE to IGNORE
-//    suspend fun insertAll(mangaFiles: List<MangaFile>)
-
     @Delete
     suspend fun deleteMangaFile(mangaFile: MangaFile)
 

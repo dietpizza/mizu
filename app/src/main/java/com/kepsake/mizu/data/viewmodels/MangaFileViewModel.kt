@@ -6,17 +6,17 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.kepsake.mizu.data.MangaDatabase
 import com.kepsake.mizu.data.models.MangaFile
-import com.kepsake.mizu.data.repositores.MangaRepository
+import com.kepsake.mizu.data.repositores.MangaFileRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class MangaViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository: MangaRepository
+class MangaFileViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository: MangaFileRepository
     val allMangaFiles: LiveData<List<MangaFile>>
 
     init {
         val mangaFileDao = MangaDatabase.getDatabase(application).mangaFileDao()
-        repository = MangaRepository(mangaFileDao)
+        repository = MangaFileRepository(mangaFileDao)
         allMangaFiles = repository.allMangaFiles
     }
 

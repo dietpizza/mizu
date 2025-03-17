@@ -33,10 +33,15 @@ fun MangaCard(manga: MangaFile) {
 
     fun onClick() {
         val intent = Intent(context, MangaReaderActivity::class.java)
-        intent.putExtra("manga.id", manga.id)
-        intent.putExtra("manga.path", manga.path)
-        intent.putExtra("manga.name", manga.fileName)
-        intent.putExtra("manga.cover", manga.firstImageEntry)
+
+        intent.putExtra("manga", manga)
+//        intent.putExtra("manga.id", manga.id)
+//        intent.putExtra("manga.path", manga.path)
+//        intent.putExtra("manga.name", manga.name)
+//        intent.putExtra("manga.cover_path", manga.cover_path)
+//        intent.putExtra("manga.last_page", manga.last_page)
+//        intent.putExtra("manga.total_pages", manga.total_pages)
+
         context.startActivity(intent)
     }
 
@@ -50,12 +55,12 @@ fun MangaCard(manga: MangaFile) {
         Box(modifier = Modifier.fillMaxSize()) {
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(File(manga.firstImageEntry))
+                    .data(File(manga.cover_path))
                     .crossfade(true)
                     .memoryCacheKey("${manga.id}_cover")
                     .memoryCachePolicy(CachePolicy.ENABLED)
                     .build(),
-                contentDescription = manga.fileName,
+                contentDescription = manga.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
                 loading = {
@@ -86,7 +91,7 @@ fun MangaCard(manga: MangaFile) {
                     .align(Alignment.BottomCenter)
             ) {
                 Text(
-                    text = manga.fileName,
+                    text = manga.name,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White,
                     modifier = Modifier.padding(8.dp),

@@ -18,12 +18,15 @@ import com.kepsake.mizu.ui.theme.MizuTheme
 class MangaReaderActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
-        val mangaPath = intent.getStringExtra("manga.path") as String
-        val mangaName = intent.getStringExtra("manga.name") as String
-        val mangaCover = intent.getStringExtra("manga.cover") as String
-        val mangaId = intent.getStringExtra("manga.id") as String
-
-        val manga = MangaFile(mangaPath, mangaName, mangaCover, mangaId)
+        val manga = intent.getParcelableExtra<MangaFile>("manga")
+//        val path = intent.getStringExtra("manga.path") as String
+//        val name = intent.getStringExtra("manga.name") as String
+//        val coverPath = intent.getStringExtra("manga.cover_path") as String
+//        val id = intent.getStringExtra("manga.id") as String
+//        val lastPage = intent.getIntExtra("manga.last_page", 0)
+//        val totalPages = intent.getIntExtra("manga.total_pages", 0)
+//        val manga =
+//            MangaFile(id, path, name, coverPath, lastPage, totalPages)
 
 
         super.onCreate(savedInstanceState)
@@ -31,7 +34,9 @@ class MangaReaderActivity : ComponentActivity() {
         setContent {
             MizuTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MangaViewerTab(innerPadding, manga)
+                    if (manga != null) {
+                        MangaViewerTab(innerPadding, manga)
+                    }
                 }
             }
         }

@@ -21,20 +21,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kepsake.mizu.logic.NaturalOrderComparator
 import com.kepsake.mizu.data.models.MangaFile
-import com.kepsake.mizu.data.viewmodels.MangaViewModel
+import com.kepsake.mizu.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu.ui.components.MangaCard
 import com.kepsake.mizu.utils.extractCoverImage
 import com.kepsake.mizu.utils.getFilePathFromUri
 import com.kepsake.mizu.utils.getMangaFiles
+import com.kepsake.mizu.utils.getZipPageCount
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.*
-import java.util.zip.ZipFile
 
 val TAG = "LibraryTab"
 
@@ -42,7 +40,7 @@ val TAG = "LibraryTab"
 @Composable
 fun LibraryTab(
     innerPadding: PaddingValues = PaddingValues(),
-    viewModel: MangaViewModel = viewModel()
+    viewModel: MangaFileViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -184,14 +182,15 @@ fun LibraryTab(
 suspend fun processManga(context: Context, path: String): MangaFile? =
     withContext(Dispatchers.IO) {
         try {
-            val fileName = File(path).name
+            val name = File(path).name
 
             // Generate unique ID for each comic file for caching
             val id = UUID.randomUUID().toString()
             val coverPath = extractCoverImage(context, id, path)
+            val totalPages = getZipPageCount(path)
 
             if (coverPath != null) {
-                return@withContext MangaFile(path, fileName, coverPath, id)
+                return@withContext MangaFile(id, path, name, coverPath, 0, totalPages)
             }
             null
 
