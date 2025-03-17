@@ -1,6 +1,5 @@
 package com.kepsake.mizu.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,12 +34,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.util.UUID
 import java.util.zip.ZipEntry
 
 
 @Composable
-fun MangaTab(innerPadding: PaddingValues, manga: MangaFile) {
+fun MangaViewerTab(innerPadding: PaddingValues, manga: MangaFile) {
     val context = LocalContext.current
     val listState = rememberLazyListState()
 

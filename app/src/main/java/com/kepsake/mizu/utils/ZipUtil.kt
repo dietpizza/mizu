@@ -9,34 +9,6 @@ import java.util.zip.ZipFile
 
 val TAG = "ZipUtil"
 
-fun extractImageFromZip(
-    context: Context,
-    zipFilePath: String,
-    entryName: String,
-    mangaId: String,
-    cachePath: String
-): File? {
-    return try {
-        val tempDir = File(context.cacheDir, "${cachePath}/$mangaId").apply {
-            if (!exists()) mkdirs()
-        }
-
-        val sanitizedName = sanitizeFileName(entryName)
-        val tempFile = File(tempDir, sanitizedName)
-
-        if (tempFile.exists()) {
-            Log.d(TAG, "Cache hit!")
-            tempFile
-        } else {
-            Log.d(TAG, "Extracted!")
-            extractEntryToFile(zipFilePath, tempFile.path, entryName)
-        }
-    } catch (e: Exception) {
-        Log.e(TAG, "Error extracting image: $entryName", e)
-        null
-    }
-}
-
 fun extractEntryToFile(
     zipFilePath: String,
     outFilePath: String,
@@ -111,4 +83,52 @@ fun extractCoverImage(context: Context, mangaId: String, mangaPath: String): Str
     }
 
     return null
+}
+
+
+fun extractImageFromZip(
+    context: Context,
+    zipFilePath: String,
+    entryName: String,
+    mangaId: String,
+    cachePath: String
+): File? {
+    return try {
+        val tempDir = File(context.cacheDir, "${cachePath}/$mangaId").apply {
+            if (!exists()) mkdirs()
+        }
+
+        val sanitizedName = sanitizeFileName(entryName)
+        val tempFile = File(tempDir, sanitizedName)
+
+        if (tempFile.exists()) {
+            tempFile
+        } else {
+            extractEntryToFile(zipFilePath, tempFile.path, entryName)
+        }
+    } catch (e: Exception) {
+        Log.e(TAG, "Error extracting image: $entryName", e)
+        null
+    }
+}
+
+fun extractZipToFolder(zipFilePath: String, destinationPath: String): Boolean {
+    try {
+        ZipFile(File(zipFilePath)).use { zipFile ->
+            val entries = zipFile.entries().toList()
+            entries.forEach {
+                if (isImageFile(it.name) && !it.isDirectory) {
+                    val outFile = File(destinationPath, it.name)
+                    zipFile.getInputStream(it).use { input ->
+                        outFile.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                }
+            }
+            return true
+        }
+    } catch (e: Exception) {
+        return false
+    }
 }

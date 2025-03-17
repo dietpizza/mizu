@@ -2,7 +2,6 @@ package com.kepsake.mizu.activities
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
@@ -11,10 +10,9 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import com.kepsake.mizu.data.MangaDatabase
 import com.kepsake.mizu.data.models.MangaFile
 
-import com.kepsake.mizu.ui.screens.MangaTab
+import com.kepsake.mizu.ui.screens.MangaViewerTab
 import com.kepsake.mizu.ui.theme.MizuTheme
 
 class MangaReaderActivity : ComponentActivity() {
@@ -33,7 +31,7 @@ class MangaReaderActivity : ComponentActivity() {
         setContent {
             MizuTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MangaTab(innerPadding, manga)
+                    MangaViewerTab(innerPadding, manga)
                 }
             }
         }
