@@ -1,5 +1,6 @@
 package com.kepsake.mizu.ui.components
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,15 +23,15 @@ import coil.request.ImageRequest
 import com.kepsake.mizu.data.models.MangaPage
 import com.kepsake.mizu.utils.extractImageFromZip
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import java.io.File
+
+val TAG = "MangaPanel"
 
 @Composable
 fun MangaPanel(
     zipFilePath: String,
     mangaPage: MangaPage,
-    extractedImages: MutableMap<String, File?>,
+    pageCache: MutableMap<String, Bitmap?>,
     mangaId: String
 ) {
     val context = LocalContext.current
@@ -38,33 +39,30 @@ fun MangaPanel(
     val screenWidthDp = configuration.screenWidthDp
 
     val cardHeight by remember { mutableStateOf(screenWidthDp / mangaPage.aspect_ratio) }
-    var imageFile by remember { mutableStateOf<File?>(null) }
+    var imageData by remember { mutableStateOf<Bitmap?>(null) }
 
     LaunchedEffect(mangaPage, mangaId) {
-        imageFile = extractedImages[mangaPage.page_name] ?: withContext(Dispatchers.IO) {
-            val file = extractImageFromZip(
-                context,
-                zipFilePath,
-                mangaPage.page_name,
-                mangaId,
-                "images"
-            )
-            extractedImages[mangaPage.page_name] = file
-            file
+        if (pageCache[mangaPage.page_name] == null) {
+            imageData = withContext(Dispatchers.IO) {
+                val bitmap = pageCache[mangaPage.page_name] ?: extractImageFromZip(
+                    zipFilePath,
+                    mangaPage.page_name,
+                )
+                pageCache[mangaPage.page_name] = bitmap
+                bitmap
+            }
         }
     }
 
     SubcomposeAsyncImage(
-        model = imageFile?.let {
-            ImageRequest.Builder(context)
-                .data(it)
-                .crossfade(true)
-                .diskCacheKey("${mangaId}_${mangaPage.page_name}")  // Use mangaId in cache key
-                .memoryCacheKey("${mangaId}_${mangaPage.page_name}") // Use mangaId in cache key
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .diskCachePolicy(CachePolicy.ENABLED)
-                .build()
-        },
+        model = ImageRequest.Builder(context)
+            .data(pageCache[mangaPage.page_name] ?: imageData)
+            .crossfade(120)
+            .diskCacheKey("${mangaId}_${mangaPage.page_name}")  // Use mangaId in cache key
+            .memoryCacheKey("${mangaId}_${mangaPage.page_name}") // Use mangaId in cache key
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .build(),
         contentDescription = null,
         modifier = Modifier
             .fillMaxWidth()

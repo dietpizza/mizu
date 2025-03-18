@@ -1,5 +1,6 @@
 package com.kepsake.mizu.ui.screens
 
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -43,7 +44,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import java.io.File
 import java.util.UUID
 
 
@@ -63,7 +63,7 @@ fun MangaViewerTab(
         .map { pages -> pages.sortedWith(compareBy(NaturalOrderComparator()) { it.page_name }) }
         .collectAsState(initial = null)
 
-    val extractedImages = remember { mutableStateMapOf<String, File?>() }
+    val pageCache = remember { mutableStateMapOf<String, Bitmap?>() }
     var isLoading by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0f) }
 
@@ -79,7 +79,7 @@ fun MangaViewerTab(
     LaunchedEffect(mangaPages) {
         isLoading = true
         CoroutineScope(Dispatchers.IO).launch {
-            extractedImages.clear()
+            pageCache.clear()
 
             if (mangaPages?.isEmpty() == true) {
                 val entries = getZipFileEntries(manga.path)
@@ -152,7 +152,6 @@ fun MangaViewerTab(
                         val _manga = _newData.toMangaFile()
 
                         mangaViewModel.update(_manga)
-                        Log.e("ROHAN", "Page: ${page + 1}")
                     }
                 },
                 contentPadding = PaddingValues.Absolute(
@@ -161,7 +160,7 @@ fun MangaViewerTab(
                 ),
             ) {
                 items(items = mangaPages ?: emptyList(), key = { it.page_name }) { mangaPage ->
-                    MangaPanel(manga.path, mangaPage, extractedImages, manga.id)
+                    MangaPanel(manga.path, mangaPage, pageCache, manga.id)
                 }
             }
         }

@@ -1,8 +1,11 @@
 package com.kepsake.mizu.utils
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import com.kepsake.mizu.logic.NaturalOrderComparator
+import java.io.BufferedInputStream
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -91,57 +94,57 @@ fun extractCoverImage(context: Context, mangaId: String, mangaPath: String): Str
 }
 
 
-fun extractImageFromZip(
-    context: Context,
-    zipFilePath: String,
-    entryName: String,
-    mangaId: String,
-    cachePath: String
-): File? {
-    return try {
-        val tempDir = File(context.cacheDir, "${cachePath}/$mangaId").apply {
-            if (!exists()) mkdirs()
-        }
+//fun extractImageFromZip(
+//    context: Context,
+//    zipFilePath: String,
+//    entryName: String,
+//    mangaId: String,
+//    cachePath: String
+//): File? {
+//    return try {
+//        val tempDir = File(context.cacheDir, "${cachePath}/$mangaId").apply {
+//            if (!exists()) mkdirs()
+//        }
+//
+//        val sanitizedName = sanitizeFileName(entryName)
+//        val tempFile = File(tempDir, sanitizedName)
+//
+//        if (tempFile.exists()) {
+//            tempFile
+//        } else {
+//            extractEntryToFile(zipFilePath, tempFile.path, entryName)
+//        }
+//    } catch (e: Exception) {
+//        Log.e(TAG, "Error extracting image: $entryName", e)
+//        null
+//    }
+//}
 
-        val sanitizedName = sanitizeFileName(entryName)
-        val tempFile = File(tempDir, sanitizedName)
-
-        if (tempFile.exists()) {
-            tempFile
-        } else {
-            extractEntryToFile(zipFilePath, tempFile.path, entryName)
-        }
-    } catch (e: Exception) {
-        Log.e(TAG, "Error extracting image: $entryName", e)
-        null
-    }
-}
-
-fun extractZipToFolder(zipFilePath: String, destinationPath: String): Boolean {
-    File(destinationPath).apply {
-        mkdirs()
-    }
-    try {
-        ZipFile(File(zipFilePath)).use { zipFile ->
-            val entries = zipFile.entries().toList()
-            entries.forEach {
-                if (isImageFile(it.name) && !it.isDirectory) {
-                    val outFile = File(destinationPath, it.name)
-                    zipFile.getInputStream(it).use { input ->
-                        outFile.outputStream().use { output ->
-                            input.copyTo(output)
-                        }
-                    }
-                    val aspectRatio = getImageAspectRatio(outFile.path)
-                    Log.e(TAG, "Aspect Ratio: $aspectRatio")
-                }
-            }
-            return true
-        }
-    } catch (e: Exception) {
-        return false
-    }
-}
+//fun extractZipToFolder(zipFilePath: String, destinationPath: String): Boolean {
+//    File(destinationPath).apply {
+//        mkdirs()
+//    }
+//    try {
+//        ZipFile(File(zipFilePath)).use { zipFile ->
+//            val entries = zipFile.entries().toList()
+//            entries.forEach {
+//                if (isImageFile(it.name) && !it.isDirectory) {
+//                    val outFile = File(destinationPath, it.name)
+//                    zipFile.getInputStream(it).use { input ->
+//                        outFile.outputStream().use { output ->
+//                            input.copyTo(output)
+//                        }
+//                    }
+//                    val aspectRatio = getImageAspectRatio(outFile.path)
+//                    Log.e(TAG, "Aspect Ratio: $aspectRatio")
+//                }
+//            }
+//            return true
+//        }
+//    } catch (e: Exception) {
+//        return false
+//    }
+//}
 
 fun getMangaPagesAspectRatios(
     context: Context,
@@ -182,28 +185,54 @@ fun getMangaPagesAspectRatios(
     return null
 }
 
-fun getMangaPagesAspectRatios(context: Context, zipFilePath: String): MutableMap<String, Float>? {
-    val tmpFile = File(context.cacheDir, "temp_aspect")
-    val pageAspectRatioMap = emptyMap<String, Float>().toMutableMap()
+//fun getMangaPagesAspectRatios(context: Context, zipFilePath: String): MutableMap<String, Float>? {
+//    val tmpFile = File(context.cacheDir, "temp_aspect")
+//    val pageAspectRatioMap = emptyMap<String, Float>().toMutableMap()
+//
+//    try {
+//        ZipFile(File(zipFilePath)).use { zipFile ->
+//            val entries = zipFile.entries().toList()
+//            entries.forEach { entry ->
+//                zipFile.getInputStream(entry).use { input ->
+//                    tmpFile.outputStream().use { output ->
+//                        input.copyTo(output)
+//                    }
+//                }
+//                val aspectRatio = getImageAspectRatio(tmpFile.path)
+//                pageAspectRatioMap[entry.name] = aspectRatio
+//            }
+//        }
+//        return pageAspectRatioMap
+//    } catch (_: Exception) {
+//        // TODO
+//    } finally {
+//        tmpFile.delete()
+//    }
+//    return null
+//}
 
-    try {
-        ZipFile(File(zipFilePath)).use { zipFile ->
-            val entries = zipFile.entries().toList()
-            entries.forEach { entry ->
-                zipFile.getInputStream(entry).use { input ->
-                    tmpFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
-                }
-                val aspectRatio = getImageAspectRatio(tmpFile.path)
-                pageAspectRatioMap[entry.name] = aspectRatio
+fun extractImageFromZip(zipFilePath: String, entryName: String): Bitmap? {
+    return try {
+        val file = File(zipFilePath)
+        if (!file.exists()) {
+            throw IllegalArgumentException("ZIP file does not exist at path: $zipFilePath")
+        }
+
+        val zipFile = ZipFile(file)
+        val entry: ZipEntry? = zipFile.getEntry(entryName)
+
+        if (entry == null) {
+            throw IllegalArgumentException("Entry '$entryName' not found in the ZIP file.")
+        }
+
+        // Read the entry's input stream and decode it into a Bitmap
+        zipFile.getInputStream(entry).use { inputStream ->
+            BufferedInputStream(inputStream).use { bufferedInputStream ->
+                BitmapFactory.decodeStream(bufferedInputStream)
             }
         }
-        return pageAspectRatioMap
-    } catch (_: Exception) {
-        // TODO
-    } finally {
-        tmpFile.delete()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
-    return null
 }
