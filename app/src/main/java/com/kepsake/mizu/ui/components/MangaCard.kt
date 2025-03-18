@@ -101,9 +101,8 @@ fun MangaCard(manga: MangaFile) {
             )
 
             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-
                 Surface(
-                    color = Color.Black.copy(alpha = 0.6f),
+                    color = Color.Black.copy(alpha = 0.8f),
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
@@ -120,6 +119,7 @@ fun MangaCard(manga: MangaFile) {
 
                 if (manga.last_page > 0 && manga.total_pages > 0) {
                     SimpleProgressBar(
+                        modifier = Modifier.padding(top = 1.dp),
                         progress =
                         (manga.last_page.toFloat() + 1f) / manga.total_pages.toFloat()
                     )

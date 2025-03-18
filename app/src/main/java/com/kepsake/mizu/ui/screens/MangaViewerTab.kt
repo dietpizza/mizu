@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,10 +43,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.UUID
-import java.util.zip.ZipEntry
 
 
 @Composable
@@ -62,56 +61,67 @@ fun MangaViewerTab(
 
     val mangaPages by mangaPageViewModel.getMangaPages(manga.id)
         .map { pages -> pages.sortedWith(compareBy(NaturalOrderComparator()) { it.page_name }) }
-        .collectAsState(initial = emptyList())
+        .collectAsState(initial = null)
 
     val extractedImages = remember { mutableStateMapOf<String, File?>() }
-    var imagesInside by remember { mutableStateOf(emptyList<ZipEntry>()) }
     var isLoading by remember { mutableStateOf(false) }
+    var progress by remember { mutableStateOf(0f) }
 
 
     LaunchedEffect(mangaPages) {
-        if (mangaPages.size > 0) {
+        if (mangaPages?.isNotEmpty() == true) {
             scope.launch {
                 listState.scrollToItem(manga.last_page)
             }
         }
     }
 
-    LaunchedEffect(manga.id) {
+    LaunchedEffect(mangaPages) {
         isLoading = true
         CoroutineScope(Dispatchers.IO).launch {
             extractedImages.clear()
 
-            val entries = getZipFileEntries(manga.path)
-                .sortedWith(compareBy(NaturalOrderComparator()) { it.name })
-            val pageAspectRatioMap = getMangaPagesAspectRatios(context, manga.path)
+            if (mangaPages?.isEmpty() == true) {
+                val entries = getZipFileEntries(manga.path)
+                    .sortedWith(compareBy(NaturalOrderComparator()) { it.name })
+                val pageAspectRatioMap = getMangaPagesAspectRatios(context, manga.path, { p ->
+                    progress = p
+                })
 
-            if (pageAspectRatioMap != null) {
-                val allPages = entries.mapNotNull {
-                    val id = UUID.randomUUID().toString()
-                    val aspectRatio = pageAspectRatioMap.get(it.name)
-                    if (aspectRatio != null) {
-                        return@mapNotNull MangaPage(it.name, aspectRatio, manga.id, id)
+                if (pageAspectRatioMap != null) {
+                    val allPages = entries.mapNotNull {
+                        val id = UUID.randomUUID().toString()
+                        val aspectRatio = pageAspectRatioMap.get(it.name)
+                        if (aspectRatio != null) {
+                            return@mapNotNull MangaPage(it.name, aspectRatio, manga.id, id)
+                        }
+                        null
                     }
-                    null
+                    mangaPageViewModel.addMangaPages(allPages)
                 }
-                mangaPageViewModel.addMangaPages(allPages)
             }
-
-            withContext(Dispatchers.Main) {
-                imagesInside = entries
-                isLoading = false
-            }
+            isLoading = false
         }
     }
 
     LaunchedEffect(mangaPages) {
-        Log.e("ROHAN", "${mangaPages.size}")
+        Log.e("ROHAN", "${mangaPages?.size}")
     }
 
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (isLoading) {
+        if (mangaPages?.isEmpty() == true) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Empty",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+        }
+        if (isLoading || mangaPages?.isEmpty() == true) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -123,13 +133,15 @@ fun MangaViewerTab(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     CircularProgressIndicator(
+                        progress = { progress },
                         modifier = Modifier.size(30.dp),
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
                     )
                 }
             }
         }
-        if (mangaPages.isNotEmpty() && !isLoading) {
+        if (mangaPages?.isNotEmpty() == true) {
             PageTrackingLazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
@@ -148,20 +160,9 @@ fun MangaViewerTab(
                     bottom = innerPadding.calculateBottomPadding() + 0.dp
                 ),
             ) {
-                items(items = mangaPages, key = { it.page_name }) { mangaPage ->
+                items(items = mangaPages ?: emptyList(), key = { it.page_name }) { mangaPage ->
                     MangaPanel(manga.path, mangaPage, extractedImages, manga.id)
                 }
-            }
-        }
-        if (imagesInside.isEmpty() && !isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "No manga loaded",
-                    style = MaterialTheme.typography.titleLarge
-                )
             }
         }
     }

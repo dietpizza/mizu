@@ -143,6 +143,45 @@ fun extractZipToFolder(zipFilePath: String, destinationPath: String): Boolean {
     }
 }
 
+fun getMangaPagesAspectRatios(
+    context: Context,
+    zipFilePath: String,
+    onAspectRatioCalculated: (progress: Float) -> Unit
+): MutableMap<String, Float>? {
+    val tmpFile = File(context.cacheDir, "temp_aspect")
+    val pageAspectRatioMap = emptyMap<String, Float>().toMutableMap()
+
+    try {
+        ZipFile(File(zipFilePath)).use { zipFile ->
+            val entries = zipFile.entries().toList()
+            val totalEntries = entries.size
+
+            entries.forEachIndexed { index, entry ->
+                zipFile.getInputStream(entry).use { input ->
+                    tmpFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                val aspectRatio = getImageAspectRatio(tmpFile.path)
+                pageAspectRatioMap[entry.name] = aspectRatio
+
+                // Calculate progress as a percentage (0.0f to 1.0f)
+                val progress = (index + 1).toFloat() / totalEntries
+
+                // Call the callback with the file name, aspect ratio, and progress
+                onAspectRatioCalculated(progress)
+            }
+        }
+        return pageAspectRatioMap
+    } catch (e: Exception) {
+        // Handle exception or log error
+        e.printStackTrace()
+    } finally {
+        tmpFile.delete()
+    }
+    return null
+}
+
 fun getMangaPagesAspectRatios(context: Context, zipFilePath: String): MutableMap<String, Float>? {
     val tmpFile = File(context.cacheDir, "temp_aspect")
     val pageAspectRatioMap = emptyMap<String, Float>().toMutableMap()

@@ -46,7 +46,7 @@ fun LibraryTab(
     val coroutineScope = rememberCoroutineScope()
     val userDataStore = remember { UserDataStore(context) }
     val libraryPath by userDataStore.getString("lib.path").collectAsState(initial = "")
-    val mangaFiles by viewModel.allMangaFiles.observeAsState(listOf())
+    val mangaFiles by viewModel.allMangaFiles.observeAsState(null)
 
     var isLoading by remember { mutableStateOf(false) }
     var currentDirectoryUri by remember { mutableStateOf<Uri?>(null) }
@@ -94,9 +94,15 @@ fun LibraryTab(
     }
 
     PullToRefreshBox(
-        isRefreshing = isLoading,
-        onRefresh = { },
-        Modifier.fillMaxWidth(),
+        isRefreshing = isLoading || mangaFiles == null,
+        onRefresh = {
+//            if (libraryPath.isNotEmpty()) {
+//                coroutineScope.launch {
+//                    syncLibrary(libraryPath)
+//                }
+//            }
+        },
+        modifier = Modifier.fillMaxWidth(),
     ) {
         Box(
             modifier = Modifier.fillMaxSize()
@@ -121,7 +127,7 @@ fun LibraryTab(
                     }
                 }
 
-                (mangaFiles.isEmpty() && !isLoading) -> {
+                (mangaFiles?.isEmpty() == true && !isLoading) -> {
                     val buttonText =
                         if (libraryPath.isNotEmpty()) "Change Folder" else "Select Folder"
                     Column(
@@ -165,7 +171,7 @@ fun LibraryTab(
                         ),
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(mangaFiles, key = { it.id }) { comicFile ->
+                        items(mangaFiles ?: emptyList(), key = { it.id }) { comicFile ->
                             MangaCard(comicFile)
                         }
                     }
