@@ -1,10 +1,6 @@
 package com.kepsake.mizu.ui.components
 
-import androidx.compose.animation.core.AnimationState
-import androidx.compose.animation.core.DecayAnimationSpec
-import androidx.compose.animation.core.animateDecay
 import androidx.compose.animation.core.exponentialDecay
-import androidx.compose.animation.splineBasedDecay
 import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.gestures.ScrollScope
 import androidx.compose.foundation.gestures.snapping.SnapPosition
@@ -21,12 +17,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.foundation.gestures.snapping.SnapLayoutInfoProvider
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
-import androidx.compose.ui.MotionDurationScale
-import androidx.compose.ui.unit.Density
 import com.kepsake.mizu.ui.animation.CustomFlingBehaviour
-import kotlinx.coroutines.withContext
-import kotlin.coroutines.cancellation.CancellationException
-import kotlin.math.abs
 
 @Composable
 fun PageTrackingLazyColumn(
@@ -90,14 +81,14 @@ fun PageTrackingLazyColumn(
         reverseLayout = reverseLayout,
         verticalArrangement = verticalArrangement,
         horizontalAlignment = horizontalAlignment,
-        flingBehavior = combinedFlingBehavior,
-//        flingBehavior = CustomFlingBehaviour(
+//        flingBehavior = combinedFlingBehavior,
+        flingBehavior = CustomFlingBehaviour(
 //            flingDecay = splineBasedDecay(Density(15f))
-//            flingDecay = exponentialDecay(
-//                frictionMultiplier = 1.25f,
-//                absVelocityThreshold = 0.1f
-//            )
-//        ),
+            flingDecay = exponentialDecay(
+                frictionMultiplier = 1.25f,
+                absVelocityThreshold = 0.1f
+            )
+        ),
         userScrollEnabled = userScrollEnabled,
         content = content
     )
