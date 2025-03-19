@@ -38,4 +38,8 @@ class MangaFileRepository(private val mangaFileDao: MangaFileDao) {
     fun getMangaFileById(id: String): LiveData<MangaFile> {
         return mangaFileDao.getMangaFileById(id)
     }
+
+    suspend fun updateLastPage(mangaId: String, lastPage: Int) {
+        return mangaFileDao.updateLastPage(mangaId, lastPage)
+    }
 }

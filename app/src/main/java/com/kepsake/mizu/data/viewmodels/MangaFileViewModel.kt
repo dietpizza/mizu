@@ -36,6 +36,10 @@ class MangaFileViewModel(application: Application) : AndroidViewModel(applicatio
         repository.update(mangaFile)
     }
 
+    fun updateLastPage(mangaId: String, lastPage: Int) = viewModelScope.launch(Dispatchers.IO) {
+        repository.updateLastPage(mangaId, lastPage)
+    }
+
     fun deleteAll() = viewModelScope.launch(Dispatchers.IO) {
         repository.deleteAll()
     }

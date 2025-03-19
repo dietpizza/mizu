@@ -27,5 +27,4 @@ interface MangaPageDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM manga_pages WHERE manga_id = :mangaId AND page_name = :pageName)")
     suspend fun checkIfExists(mangaId: String, pageName: String): Boolean
-
 }

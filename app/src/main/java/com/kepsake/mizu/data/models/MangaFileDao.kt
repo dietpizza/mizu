@@ -25,4 +25,7 @@ interface MangaFileDao {
 
     @Query("SELECT * FROM manga_files WHERE path = :path LIMIT 1")
     suspend fun getMangaFileByPathSync(path: String): MangaFile?
+
+    @Query("UPDATE manga_files SET last_page = :lastPage WHERE id = :mangaId")
+    suspend fun updateLastPage(mangaId: String, lastPage: Int)
 }
