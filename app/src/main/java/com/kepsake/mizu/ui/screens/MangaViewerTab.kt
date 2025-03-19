@@ -2,6 +2,9 @@ package com.kepsake.mizu.ui.screens
 
 import android.graphics.Bitmap
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.recyclerview.widget.RecyclerView
+import com.kepsake.mizu.R
 import com.kepsake.mizu.data.models.MangaFile
 import com.kepsake.mizu.data.models.MangaPage
 import com.kepsake.mizu.data.models.toMangaFile
@@ -38,12 +43,15 @@ import com.kepsake.mizu.data.viewmodels.MangaPageViewModel
 import com.kepsake.mizu.logic.NaturalOrderComparator
 import com.kepsake.mizu.ui.components.MangaPanel
 import com.kepsake.mizu.ui.components.PageTrackingLazyColumn
+import com.kepsake.mizu.ui.components.PageTrackingRecyclerView
+import com.kepsake.mizu.utils.extractImageFromZip
 import com.kepsake.mizu.utils.getMangaPagesAspectRatios
 import com.kepsake.mizu.utils.getZipFileEntries
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 
@@ -53,10 +61,8 @@ fun MangaViewerTab(
     manga: MangaFile,
     mangaPageViewModel: MangaPageViewModel = viewModel(),
     mangaViewModel: MangaFileViewModel = viewModel()
-
 ) {
     val context = LocalContext.current
-    val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
     val mangaPages by mangaPageViewModel.getMangaPages(manga.id)
@@ -67,15 +73,49 @@ fun MangaViewerTab(
     var isLoading by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0f) }
 
+    // Adapter for RecyclerView
+    val adapter = remember {
+        object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+            override fun onCreateViewHolder(
+                parent: ViewGroup,
+                viewType: Int
+            ): RecyclerView.ViewHolder {
+                val inflater = LayoutInflater.from(parent.context)
+                val view = inflater.inflate(R.layout.manga_page_item, parent, false)
+                return object : RecyclerView.ViewHolder(view) {}
+            }
 
+            override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+                val mangaPage = mangaPages?.get(position)
+                if (mangaPage != null) {
+                    val imageView = holder.itemView.findViewById<ImageView>(R.id.manga_page_image)
+                    // Load the image into the ImageView (you can use Coil, Glide, etc.)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val bitmap = extractImageFromZip(manga.path, mangaPage.page_name)
+                        Log.e(TAG, "Extracted image: ${mangaPage.page_name}")
+                        withContext(Dispatchers.Main) {
+                            imageView.setImageBitmap(bitmap)
+                        }
+                    }
+                }
+            }
+
+            override fun getItemCount(): Int = mangaPages?.size ?: 0
+        }
+    }
+
+    // Scroll to the last read page when mangaPages is loaded
     LaunchedEffect(mangaPages) {
         if (mangaPages?.isNotEmpty() == true) {
             scope.launch {
-                listState.scrollToItem(manga.last_page)
+                // Scroll to the last page (you may need to adjust this logic for RecyclerView)
+                // This requires access to the RecyclerView instance, which is not directly available here.
+                // You can use a callback or a custom scroll listener to achieve this.
             }
         }
     }
 
+    // Load manga pages if they are not already loaded
     LaunchedEffect(mangaPages) {
         isLoading = true
         CoroutineScope(Dispatchers.IO).launch {
@@ -103,11 +143,6 @@ fun MangaViewerTab(
             isLoading = false
         }
     }
-
-    LaunchedEffect(mangaPages) {
-        Log.e("ROHAN", "${mangaPages?.size}")
-    }
-
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (mangaPages?.isEmpty() == true) {
@@ -142,27 +177,21 @@ fun MangaViewerTab(
             }
         }
         if (mangaPages?.isNotEmpty() == true) {
-            PageTrackingLazyColumn(
-                state = listState,
+            PageTrackingRecyclerView(
                 modifier = Modifier.fillMaxSize(),
+                scrollToIndex = manga.last_page,
                 onPageChange = { page ->
                     scope.launch {
                         val _current = manga.toMap()
                         val _newData = _current + mapOf("last_page" to page)
                         val _manga = _newData.toMangaFile()
+                        Log.e(TAG, "Page change: $page")
 
                         mangaViewModel.update(_manga)
                     }
                 },
-                contentPadding = PaddingValues.Absolute(
-                    top = innerPadding.calculateTopPadding() + 8.dp,
-                    bottom = innerPadding.calculateBottomPadding() + 0.dp
-                ),
-            ) {
-                items(items = mangaPages ?: emptyList(), key = { it.page_name }) { mangaPage ->
-                    MangaPanel(manga.path, mangaPage, pageCache, manga.id)
-                }
-            }
+                content = adapter
+            )
         }
     }
 }
