@@ -15,8 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
-import androidx.compose.foundation.gestures.snapping.SnapLayoutInfoProvider
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import com.kepsake.mizu.ui.animation.CustomFlingBehaviour
 
 @Composable
@@ -32,21 +30,6 @@ fun PageTrackingLazyColumn(
     content: LazyListScope.() -> Unit
 ) {
     var currentPage by remember { mutableStateOf(-1) }
-    val snapLayoutIntoProvider = remember(state) {
-        SnapLayoutInfoProvider(state, SnapPosition.Center)
-    }
-    val snapFlingBehavior = rememberSnapFlingBehavior(snapLayoutIntoProvider)
-
-    val combinedFlingBehavior = remember(state) {
-        object : FlingBehavior {
-            override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
-                val dampenedVelocity = initialVelocity * 0.75f
-                return with(snapFlingBehavior) {
-                    performFling(dampenedVelocity)
-                }
-            }
-        }
-    }
 
     LaunchedEffect(state) {
         snapshotFlow {
@@ -81,7 +64,6 @@ fun PageTrackingLazyColumn(
         reverseLayout = reverseLayout,
         verticalArrangement = verticalArrangement,
         horizontalAlignment = horizontalAlignment,
-//        flingBehavior = combinedFlingBehavior,
         flingBehavior = CustomFlingBehaviour(
 //            flingDecay = splineBasedDecay(Density(15f))
             flingDecay = exponentialDecay(
