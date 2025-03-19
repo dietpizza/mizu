@@ -42,7 +42,6 @@ import com.kepsake.mizu.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu.data.viewmodels.MangaPageViewModel
 import com.kepsake.mizu.logic.NaturalOrderComparator
 import com.kepsake.mizu.ui.components.MangaPanel
-import com.kepsake.mizu.ui.components.PageTrackingLazyColumn
 import com.kepsake.mizu.ui.components.PageTrackingRecyclerView
 import com.kepsake.mizu.utils.extractImageFromZip
 import com.kepsake.mizu.utils.getMangaPagesAspectRatios

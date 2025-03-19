@@ -27,6 +27,7 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.kepsake.mizu.activities.MangaReaderActivity
+import com.kepsake.mizu.activities.MangaViewerActivity
 import com.kepsake.mizu.data.models.MangaFile
 import java.io.File
 
@@ -55,7 +56,7 @@ fun MangaCard(manga: MangaFile) {
     val context = LocalContext.current
 
     fun onClick() {
-        val intent = Intent(context, MangaReaderActivity::class.java)
+        val intent = Intent(context, MangaViewerActivity::class.java)
         intent.putExtra("manga", manga)
 
         context.startActivity(intent)
