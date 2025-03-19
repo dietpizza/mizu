@@ -31,7 +31,7 @@ class MangaViewerActivity : ComponentActivity() {
     private val manga by lazy { intent.getParcelableExtra<MangaFile>("manga") }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        DynamicColors.applyIfAvailable(this)
+        DynamicColors.applyToActivityIfAvailable(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
@@ -45,6 +45,7 @@ class MangaViewerActivity : ComponentActivity() {
     private fun setupRecyclerView() {
         binding.mangaReaderRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@MangaViewerActivity)
+
             setHasFixedSize(true)
             addOnScrollListener(createScrollListener())
         }
