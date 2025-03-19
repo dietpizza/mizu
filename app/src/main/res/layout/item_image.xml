@@ -3,7 +3,7 @@
     android:id="@+id/mangaImageView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:adjustViewBounds="true"
-    android:scaleType="fitCenter"
+    android:adjustViewBounds="false"
+    android:scaleType="fitXY"
     android:minHeight="600dp"
     android:layout_marginBottom="8dp" />

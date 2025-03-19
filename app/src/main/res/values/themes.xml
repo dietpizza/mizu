@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Mizu" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Mizu" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Enable Dynamic Colors -->
+        <item name="android:forceDarkAllowed">true</item>
+    </style>
 </resources>
