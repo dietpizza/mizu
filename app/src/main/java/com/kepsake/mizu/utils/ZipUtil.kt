@@ -50,7 +50,6 @@ fun getZipPageCount(zipFilePath: String): Int {
     return zipFile.entries().toList().filter { isImageFile(it.name) }.size
 }
 
-// This function remains unchanged
 fun getZipFileEntries(zipFilePath: String): List<ZipEntry> {
     try {
         ZipFile(zipFilePath).use { zipFile ->

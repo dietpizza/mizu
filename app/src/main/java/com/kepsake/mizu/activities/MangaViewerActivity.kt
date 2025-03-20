@@ -1,9 +1,11 @@
 package com.kepsake.mizu.activities
 
+import android.animation.ObjectAnimator
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.animation.DecelerateInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -25,6 +27,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -107,9 +111,19 @@ class MangaViewerActivity : ComponentActivity() {
         val progressFlow = MutableStateFlow(0f)
 
         val progressJob = lifecycleScope.launch(Dispatchers.Main) {
-            progressFlow.collect { progress ->
-                val progressValue = (progress * 100f).toInt()
-                binding.mangaProcessingProgressBar.progress = progressValue
+            progressFlow.sample(300).collect { progress ->
+                val progressValue = (progress * 100f)
+                ObjectAnimator.ofInt(
+                    binding.mangaProcessingProgressBar,
+                    "progress",
+                    binding.mangaProcessingProgressBar.progress,
+                    progressValue.toInt()
+                ).apply {
+                    duration = 200 // Animation duration in milliseconds
+                    interpolator = DecelerateInterpolator() // For a smooth deceleration effect
+                    start()
+                }
+//                binding.mangaProcessingProgressBar.progress = progressValue.toInt()
             }
         }
 
