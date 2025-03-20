@@ -15,8 +15,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-data class MangaPage(val imagePath: String, val aspectRatio: Float)
-
 class MangaPanelAdapter(
     private val manga: MangaFile,
     private val mangaPages: List<MangaPage>,
