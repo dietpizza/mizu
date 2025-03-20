@@ -5,6 +5,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import com.kepsake.mizu.logic.NaturalOrderComparator
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
 import java.io.File
 import java.util.zip.ZipEntry
@@ -132,14 +135,16 @@ fun getMangaPagesAspectRatios(
     return null
 }
 
-fun extractImageFromZip(zipFilePath: String, entryName: String): Bitmap? {
+suspend fun extractImageFromZip(zipFilePath: String, entryName: String): Bitmap? {
     return try {
         val file = File(zipFilePath)
         if (!file.exists()) {
             throw IllegalArgumentException("ZIP file does not exist at path: $zipFilePath")
         }
 
-        val zipFile = ZipFile(file)
+        val zipFile = withContext(Dispatchers.IO) {
+            ZipFile(file)
+        }
         val entry: ZipEntry? = zipFile.getEntry(entryName)
 
         if (entry == null) {
@@ -147,7 +152,9 @@ fun extractImageFromZip(zipFilePath: String, entryName: String): Bitmap? {
         }
 
         // Read the entry's input stream and decode it into a Bitmap
-        zipFile.getInputStream(entry).use { inputStream ->
+        withContext(Dispatchers.IO) {
+            zipFile.getInputStream(entry)
+        }.use { inputStream ->
             BufferedInputStream(inputStream).use { bufferedInputStream ->
                 BitmapFactory.decodeStream(bufferedInputStream)
             }
