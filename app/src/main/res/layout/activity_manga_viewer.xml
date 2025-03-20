@@ -8,8 +8,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/mangaReaderRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingVertical="8dp">
+        android:layout_height="match_parent">
 
     </androidx.recyclerview.widget.RecyclerView>
 
@@ -21,30 +20,18 @@
         android:background="?attr/colorSurfaceContainer"
         android:visibility="visible">
 
-        <com.kepsake.mizu.ui.components.CircularProgress
+        <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/mangaProcessingProgressBar"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            app:strokeWidth="6dp"
-            app:progress="0"
-            app:max="100"
-            app:trackColor="?attr/colorPrimaryContainer"
-            app:progressColor="?attr/colorPrimary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="false"
+            app:indicatorSize="48dp"
+            app:trackThickness="4dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!--        <ProgressBar-->
-        <!--            android:id="@+id/mangaProcessingProgressBar"-->
-        <!--            style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Inverse"-->
-        <!--            android:layout_width="wrap_content"-->
-        <!--            android:layout_height="wrap_content"-->
-        <!--            android:background="?attr/colorSurfaceContainer"-->
-        <!--            app:layout_constraintBottom_toBottomOf="parent"-->
-        <!--            app:layout_constraintEnd_toEndOf="parent"-->
-        <!--            app:layout_constraintStart_toStartOf="parent"-->
-        <!--            app:layout_constraintTop_toTopOf="parent" />-->
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,5 +4,70 @@
     <style name="Theme.Mizu" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Enable Dynamic Colors -->
         <item name="android:forceDarkAllowed">true</item>
+        <item name="textInputStyle">@style/Widget.Material3.TextInputLayout.OutlinedBox</item>
+
+        <!-- Buttons -->
+        <item name="buttonStyle">@style/Widget.Material3.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.Material3.Button.OutlinedButton
+        </item>
+        <!-- Cards -->
+        <item name="materialCardViewStyle">@style/Widget.Material3.CardView.Elevated</item>
+
+        <!-- Progress Indicators -->
+        <item name="circularProgressIndicatorStyle">
+            @style/Widget.Material3.CircularProgressIndicator
+        </item>
+        <item name="linearProgressIndicatorStyle">@style/Widget.Material3.LinearProgressIndicator
+        </item>
+
+        <!-- Checkboxes -->
+        <item name="checkboxStyle">@style/Widget.Material3.CompoundButton.CheckBox</item>
+
+        <!-- Radio Buttons -->
+        <item name="radioButtonStyle">@style/Widget.Material3.CompoundButton.RadioButton</item>
+
+        <!-- Switches -->
+        <item name="switchStyle">@style/Widget.Material3.CompoundButton.Switch</item>
+
+        <!-- Toolbars -->
+        <item name="toolbarStyle">@style/Widget.Material3.Toolbar</item>
+
+        <!-- AppBarLayout -->
+        <item name="appBarLayoutStyle">@style/Widget.Material3.AppBarLayout</item>
+
+        <!-- Bottom Navigation -->
+        <item name="bottomNavigationStyle">@style/Widget.Material3.BottomNavigationView</item>
+
+        <!-- Navigation Rail -->
+        <item name="navigationRailStyle">@style/Widget.Material3.NavigationRailView</item>
+
+
+        <!-- Dialogs -->
+        <item name="alertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog</item>
+        <item name="dialogTheme">@style/ThemeOverlay.Material3.Dialog</item>
+
+        <!-- Snackbars -->
+        <item name="snackbarStyle">@style/Widget.Material3.Snackbar</item>
+
+        <!-- Bottom Sheets -->
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.Material3.BottomSheetDialog</item>
+        <item name="bottomSheetStyle">@style/Widget.Material3.BottomSheet</item>
+
+        <!-- Text Appearance -->
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.Material3.HeadlineLarge
+        </item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.Material3.HeadlineMedium
+        </item>
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.Material3.HeadlineSmall
+        </item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.Material3.TitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.Material3.TitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.Material3.TitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.Material3.BodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.Material3.BodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.Material3.BodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.Material3.LabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.Material3.LabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.Material3.LabelSmall</item>
     </style>
 </resources>

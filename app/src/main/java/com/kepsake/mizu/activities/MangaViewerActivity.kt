@@ -23,6 +23,7 @@ import com.kepsake.mizu.utils.getMangaPagesAspectRatios
 import com.kepsake.mizu.utils.getZipFileEntries
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -87,14 +88,6 @@ class MangaViewerActivity : ComponentActivity() {
         lifecycleScope.launch {
             manga?.let { mangaFile ->
                 mangaPagesViewModel.getMangaPages(mangaFile.id).collectLatest { pages ->
-//                    binding.mangaProcessingProgressBar.setProgress(0f)
-//                    (0..100).forEach({
-//                        delay(100)
-//                        Log.e("ROHAN", "Progress: ${it}}")
-//                        binding.mangaProcessingProgressBar.setProgress(it.toFloat())
-//                    })
-
-
                     if (pages.isEmpty()) {
                         loadNewPages(mangaFile)
                     } else {
@@ -110,15 +103,39 @@ class MangaViewerActivity : ComponentActivity() {
         val entries = getZipFileEntries(mangaFile.path)
             .sortedWith(compareBy(NaturalOrderComparator()) { it.name })
 
-        val pageAspectRatioMap = getMangaPagesAspectRatios(
-            this,
-            mangaFile.path
-        ) { progress ->
-            val progressValue = (progress * 100f).toInt()
-            binding.mangaProcessingProgressBar.post {
-                binding.mangaProcessingProgressBar.setProgress(progressValue.toFloat())
+
+        val progressFlow = MutableStateFlow(0f)
+
+        // Collect progress updates on the main thread
+        val progressJob = lifecycleScope.launch(Dispatchers.Main) {
+            progressFlow.collect { progress ->
+                val progressValue = (progress * 100f).toInt()
+                binding.mangaProcessingProgressBar.progress = progressValue
             }
         }
+
+        // Get aspect ratios with progress updates
+        val pageAspectRatioMap = withContext(Dispatchers.IO) {
+            getMangaPagesAspectRatios(
+                this@MangaViewerActivity,  // Replace with your actual context
+                mangaFile.path
+            ) { progress ->
+                progressFlow.value = progress
+            }
+        }
+
+        // Cancel the progress collection job when done
+        progressJob.cancel()
+
+//        val pageAspectRatioMap = getMangaPagesAspectRatios(
+//            this,
+//            mangaFile.path
+//        ) { progress ->
+//            binding.mangaProcessingProgressBar.post {
+//                binding.mangaProcessingProgressBar.setProgress(progress)
+//            }
+//        }
+
 
         pageAspectRatioMap?.let { ratioMap ->
             val allPages = entries.mapNotNull { entry ->
