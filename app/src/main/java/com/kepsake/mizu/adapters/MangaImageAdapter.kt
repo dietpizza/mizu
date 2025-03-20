@@ -1,6 +1,8 @@
 package com.kepsake.mizu.adapters
 
 import android.content.res.Resources
+import android.graphics.Bitmap
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -21,6 +23,7 @@ class MangaPanelAdapter(
 ) : RecyclerView.Adapter<MangaPanelAdapter.MangaViewHolder>() {
 
     private val screenWidth = Resources.getSystem().displayMetrics.widthPixels
+    private val pageCache = mutableMapOf<String, Bitmap?>()
 
     class MangaViewHolder(val binding: MangaPanelBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -32,13 +35,22 @@ class MangaPanelAdapter(
     override fun onBindViewHolder(holder: MangaViewHolder, position: Int) {
         val page = mangaPages[position]
         val imageHeight = (screenWidth / page.aspect_ratio).toInt()
+        val pageKey = mangaPages[position].page_name
 
         holder.binding.mangaImageViewSmall.layoutParams.height = imageHeight
         holder.binding.mangaImageViewSmall.requestLayout()
 
+        if (pageCache[pageKey] != null) {
+            Log.e("ROHAN", "onBindViewHolder: Cache Hit!")
+        }
+
         CoroutineScope(Dispatchers.Main).launch {
-            val bitmap =
-                withContext(Dispatchers.IO) { extractImageFromZip(manga.path, page.page_name) }
+            val bitmap = pageCache[pageKey] ?: withContext(Dispatchers.IO) {
+                extractImageFromZip(manga.path, page.page_name).let {
+                    pageCache[pageKey] = it
+                    return@withContext it
+                }
+            }
             bitmap?.let {
                 holder.binding.mangaImageViewSmall.load(it) {
                     crossfade(true)
