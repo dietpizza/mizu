@@ -94,58 +94,6 @@ fun extractCoverImage(context: Context, mangaId: String, mangaPath: String): Str
 }
 
 
-//fun extractImageFromZip(
-//    context: Context,
-//    zipFilePath: String,
-//    entryName: String,
-//    mangaId: String,
-//    cachePath: String
-//): File? {
-//    return try {
-//        val tempDir = File(context.cacheDir, "${cachePath}/$mangaId").apply {
-//            if (!exists()) mkdirs()
-//        }
-//
-//        val sanitizedName = sanitizeFileName(entryName)
-//        val tempFile = File(tempDir, sanitizedName)
-//
-//        if (tempFile.exists()) {
-//            tempFile
-//        } else {
-//            extractEntryToFile(zipFilePath, tempFile.path, entryName)
-//        }
-//    } catch (e: Exception) {
-//        Log.e(TAG, "Error extracting image: $entryName", e)
-//        null
-//    }
-//}
-
-//fun extractZipToFolder(zipFilePath: String, destinationPath: String): Boolean {
-//    File(destinationPath).apply {
-//        mkdirs()
-//    }
-//    try {
-//        ZipFile(File(zipFilePath)).use { zipFile ->
-//            val entries = zipFile.entries().toList()
-//            entries.forEach {
-//                if (isImageFile(it.name) && !it.isDirectory) {
-//                    val outFile = File(destinationPath, it.name)
-//                    zipFile.getInputStream(it).use { input ->
-//                        outFile.outputStream().use { output ->
-//                            input.copyTo(output)
-//                        }
-//                    }
-//                    val aspectRatio = getImageAspectRatio(outFile.path)
-//                    Log.e(TAG, "Aspect Ratio: $aspectRatio")
-//                }
-//            }
-//            return true
-//        }
-//    } catch (e: Exception) {
-//        return false
-//    }
-//}
-
 fun getMangaPagesAspectRatios(
     context: Context,
     zipFilePath: String,
@@ -184,32 +132,6 @@ fun getMangaPagesAspectRatios(
     }
     return null
 }
-
-//fun getMangaPagesAspectRatios(context: Context, zipFilePath: String): MutableMap<String, Float>? {
-//    val tmpFile = File(context.cacheDir, "temp_aspect")
-//    val pageAspectRatioMap = emptyMap<String, Float>().toMutableMap()
-//
-//    try {
-//        ZipFile(File(zipFilePath)).use { zipFile ->
-//            val entries = zipFile.entries().toList()
-//            entries.forEach { entry ->
-//                zipFile.getInputStream(entry).use { input ->
-//                    tmpFile.outputStream().use { output ->
-//                        input.copyTo(output)
-//                    }
-//                }
-//                val aspectRatio = getImageAspectRatio(tmpFile.path)
-//                pageAspectRatioMap[entry.name] = aspectRatio
-//            }
-//        }
-//        return pageAspectRatioMap
-//    } catch (_: Exception) {
-//        // TODO
-//    } finally {
-//        tmpFile.delete()
-//    }
-//    return null
-//}
 
 fun extractImageFromZip(zipFilePath: String, entryName: String): Bitmap? {
     return try {

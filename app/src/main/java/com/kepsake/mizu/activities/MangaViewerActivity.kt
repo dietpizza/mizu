@@ -106,7 +106,6 @@ class MangaViewerActivity : ComponentActivity() {
 
         val progressFlow = MutableStateFlow(0f)
 
-        // Collect progress updates on the main thread
         val progressJob = lifecycleScope.launch(Dispatchers.Main) {
             progressFlow.collect { progress ->
                 val progressValue = (progress * 100f).toInt()
@@ -114,7 +113,6 @@ class MangaViewerActivity : ComponentActivity() {
             }
         }
 
-        // Get aspect ratios with progress updates
         val pageAspectRatioMap = withContext(Dispatchers.IO) {
             getMangaPagesAspectRatios(
                 this@MangaViewerActivity,  // Replace with your actual context
@@ -124,17 +122,8 @@ class MangaViewerActivity : ComponentActivity() {
             }
         }
 
-        // Cancel the progress collection job when done
         progressJob.cancel()
 
-//        val pageAspectRatioMap = getMangaPagesAspectRatios(
-//            this,
-//            mangaFile.path
-//        ) { progress ->
-//            binding.mangaProcessingProgressBar.post {
-//                binding.mangaProcessingProgressBar.setProgress(progress)
-//            }
-//        }
 
 
         pageAspectRatioMap?.let { ratioMap ->
