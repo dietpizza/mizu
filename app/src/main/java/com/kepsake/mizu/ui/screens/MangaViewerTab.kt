@@ -80,14 +80,15 @@ fun MangaViewerTab(
                 viewType: Int
             ): RecyclerView.ViewHolder {
                 val inflater = LayoutInflater.from(parent.context)
-                val view = inflater.inflate(R.layout.manga_page_item, parent, false)
+                val view = inflater.inflate(R.layout.manga_panel, parent, false)
                 return object : RecyclerView.ViewHolder(view) {}
             }
 
             override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
                 val mangaPage = mangaPages?.get(position)
                 if (mangaPage != null) {
-                    val imageView = holder.itemView.findViewById<ImageView>(R.id.manga_page_image)
+                    val imageView =
+                        holder.itemView.findViewById<ImageView>(R.id.mangaImageViewSmall)
                     // Load the image into the ImageView (you can use Coil, Glide, etc.)
                     CoroutineScope(Dispatchers.IO).launch {
                         val bitmap = extractImageFromZip(manga.path, mangaPage.page_name)

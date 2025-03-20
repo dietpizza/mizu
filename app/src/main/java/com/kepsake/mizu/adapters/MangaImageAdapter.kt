@@ -1,7 +1,9 @@
 package com.kepsake.mizu.adapters
 
 import android.content.res.Resources
+import android.graphics.Rect
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
@@ -9,12 +11,12 @@ import com.kepsake.mizu.R
 import com.kepsake.mizu.data.models.MangaFile
 import com.kepsake.mizu.data.models.MangaPage
 import com.kepsake.mizu.databinding.MangaPanelBinding
+import com.kepsake.mizu.utils.dpToPx
 import com.kepsake.mizu.utils.extractImageFromZip
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
 
 data class MangaPage(val imagePath: String, val aspectRatio: Float)
 

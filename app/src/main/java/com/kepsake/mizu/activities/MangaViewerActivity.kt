@@ -1,6 +1,8 @@
 package com.kepsake.mizu.activities
 
+import android.graphics.Rect
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
@@ -16,12 +18,26 @@ import com.kepsake.mizu.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu.data.viewmodels.MangaPageViewModel
 import com.kepsake.mizu.databinding.ActivityMangaViewerBinding
 import com.kepsake.mizu.logic.NaturalOrderComparator
+import com.kepsake.mizu.utils.dpToPx
 import com.kepsake.mizu.utils.getMangaPagesAspectRatios
 import com.kepsake.mizu.utils.getZipFileEntries
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
+
+class SpaceItemDecoration(private val spaceHeight: Int) : RecyclerView.ItemDecoration() {
+    override fun getItemOffsets(
+        outRect: Rect,
+        view: View,
+        parent: RecyclerView,
+        state: RecyclerView.State
+    ) {
+        outRect.bottom = spaceHeight // Adds 8dp space below each item
+    }
+}
 
 class MangaViewerActivity : ComponentActivity() {
     private val mangaPagesViewModel: MangaPageViewModel by viewModels()
@@ -48,6 +64,7 @@ class MangaViewerActivity : ComponentActivity() {
 
             setHasFixedSize(true)
             addOnScrollListener(createScrollListener())
+            addItemDecoration(SpaceItemDecoration(8.dpToPx()))
         }
     }
 
@@ -70,6 +87,14 @@ class MangaViewerActivity : ComponentActivity() {
         lifecycleScope.launch {
             manga?.let { mangaFile ->
                 mangaPagesViewModel.getMangaPages(mangaFile.id).collectLatest { pages ->
+//                    binding.mangaProcessingProgressBar.setProgress(0f)
+//                    (0..100).forEach({
+//                        delay(100)
+//                        Log.e("ROHAN", "Progress: ${it}}")
+//                        binding.mangaProcessingProgressBar.setProgress(it.toFloat())
+//                    })
+
+
                     if (pages.isEmpty()) {
                         loadNewPages(mangaFile)
                     } else {
@@ -82,8 +107,6 @@ class MangaViewerActivity : ComponentActivity() {
 
     private suspend fun loadNewPages(mangaFile: MangaFile) {
         delay(100)
-        binding.mangaProcessingProgressBar.progress = 0
-
         val entries = getZipFileEntries(mangaFile.path)
             .sortedWith(compareBy(NaturalOrderComparator()) { it.name })
 
@@ -92,7 +115,9 @@ class MangaViewerActivity : ComponentActivity() {
             mangaFile.path
         ) { progress ->
             val progressValue = (progress * 100f).toInt()
-            binding.mangaProcessingProgressBar.setProgress(progressValue, true)
+            binding.mangaProcessingProgressBar.post {
+                binding.mangaProcessingProgressBar.setProgress(progressValue.toFloat())
+            }
         }
 
         pageAspectRatioMap?.let { ratioMap ->
